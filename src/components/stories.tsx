@@ -14,7 +14,7 @@ import {
 } from "@/app/actions/story-actions";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
-import { useToast } from "../../hooks/use-toast";
+import { useToast } from "../hooks/use-toast";
 interface Story {
 	_id: string;
 	userId: string;

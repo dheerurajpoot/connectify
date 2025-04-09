@@ -9,7 +9,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getConversations } from "@/app/actions/message-actions";
 import { useSession } from "next-auth/react";
-import { useToast } from "../../hooks/use-toast";
+import { useToast } from "../hooks/use-toast";
 interface Conversation {
 	partner: {
 		_id: string;

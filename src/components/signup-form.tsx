@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { registerUser } from "@/app/actions/auth-actions";
-import { useToast } from "../../hooks/use-toast";
+import { useToast } from "../hooks/use-toast";
 import { useForm } from "react-hook-form";
 
 export function SignupForm() {

@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { createNewPost } from "@/app/actions/post-actions";
 import { useSession } from "next-auth/react";
-import { useToast } from "../../hooks/use-toast";
+import { useToast } from "../hooks/use-toast";
 
 export function CreatePostForm() {
 	const [postText, setPostText] = useState("");

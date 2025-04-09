@@ -10,7 +10,7 @@ import { useSearchParams } from "next/navigation";
 import { getUserMessages, sendNewMessage } from "@/app/actions/message-actions";
 import { useSession } from "next-auth/react";
 import { io, type Socket } from "socket.io-client";
-import { useToast } from "../../hooks/use-toast";
+import { useToast } from "../hooks/use-toast";
 
 interface Message {
 	_id: string;
