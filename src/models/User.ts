@@ -12,6 +12,7 @@ export interface IUser extends Document {
 	website?: string;
 	followers: mongoose.Types.ObjectId[];
 	following: mongoose.Types.ObjectId[];
+	posts: mongoose.Types.ObjectId[];
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -29,6 +30,7 @@ const UserSchema = new Schema<IUser>(
 		website: { type: String },
 		followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
 		following: [{ type: Schema.Types.ObjectId, ref: "User" }],
+		posts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
 	},
 	{ timestamps: true }
 );

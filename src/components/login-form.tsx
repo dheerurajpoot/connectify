@@ -1,6 +1,5 @@
 "use client";
 
-import type React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,13 +12,15 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { loginUser } from "@/app/actions/auth-actions";
 import { useToast } from "../hooks/use-toast";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export function LoginForm() {
 	const [isLoading, setIsLoading] = useState(false);
 	const { toast } = useToast();
+	const router = useRouter();
 	const form = useForm({
 		defaultValues: {
 			email: "",
@@ -32,20 +33,29 @@ export function LoginForm() {
 		setIsLoading(true);
 
 		try {
-			const formData = new FormData();
-			formData.append("email", values.email);
-			formData.append("password", values.password);
-			formData.append("remember", values.remember ? "true" : "false");
+			const result = await signIn("credentials", {
+				email: values.email,
+				password: values.password,
+				redirect: false,
+			});
 
-			const result = await loginUser(formData);
+			console.log("result", result);
 
 			if (result?.error) {
 				toast({
 					title: "Error",
-					description: result.error,
+					description: "Invalid email or password",
 					variant: "destructive",
 				});
+				return;
 			}
+
+			toast({
+				title: "Success",
+				description: "Logged in successfully",
+			});
+			router.push("/");
+			router.refresh();
 		} catch (error) {
 			toast({
 				title: "Error",

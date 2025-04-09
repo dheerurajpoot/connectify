@@ -1,8 +1,6 @@
 "use server";
 
 import { createUser, getUserByEmail } from "@/lib/db";
-import { signIn } from "next-auth/react";
-import { redirect } from "next/navigation";
 
 export async function registerUser(formData: FormData) {
 	try {
@@ -35,15 +33,7 @@ export async function registerUser(formData: FormData) {
 		};
 
 		await createUser(userData);
-
-		// Sign in the user
-		await signIn("credentials", {
-			email,
-			password,
-			redirect: false,
-		});
-
-		redirect("/");
+		return { success: true };
 	} catch (error) {
 		console.error("Registration error:", error);
 		return { error: "Failed to register user" };
@@ -60,17 +50,13 @@ export async function loginUser(formData: FormData) {
 			return { error: "Email and password are required" };
 		}
 
-		const result = await signIn("credentials", {
-			email,
-			password,
-			redirect: false,
-		});
-
-		if (result?.error) {
+		// Check if user exists
+		const user = await getUserByEmail(email);
+		if (!user) {
 			return { error: "Invalid email or password" };
 		}
 
-		redirect("/");
+		return { success: true };
 	} catch (error) {
 		console.error("Login error:", error);
 		return { error: "Failed to log in" };

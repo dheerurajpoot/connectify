@@ -16,10 +16,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { registerUser } from "@/app/actions/auth-actions";
 import { useToast } from "../hooks/use-toast";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 
 export function SignupForm() {
 	const [isLoading, setIsLoading] = useState(false);
 	const { toast } = useToast();
+	const router = useRouter();
 	const form = useForm({
 		defaultValues: {
 			firstName: "",
@@ -52,7 +54,13 @@ export function SignupForm() {
 					variant: "destructive",
 				});
 			}
+			toast({
+				title: "Success",
+				description: "Account created successfully",
+			});
+			router.push("/auth/login");
 		} catch (error) {
+			console.log("error", error);
 			toast({
 				title: "Error",
 				description: "Something went wrong. Please try again.",

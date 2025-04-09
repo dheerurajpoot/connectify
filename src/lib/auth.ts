@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { User, IUser } from "@/models";
 import { connectDB } from "./mongodb";
 import bcrypt from "bcryptjs";
+import NextAuth from "next-auth";
 
 // Extend the built-in session types
 declare module "next-auth" {
@@ -40,7 +41,8 @@ export const authOptions: NextAuthOptions = {
 
 					const user = await User.findOne({
 						email: credentials.email,
-					});
+					}).lean();
+
 					if (!user) return null;
 
 					const isPasswordValid = await bcrypt.compare(
@@ -52,7 +54,7 @@ export const authOptions: NextAuthOptions = {
 
 					// Return user without password
 					return {
-						id: (user as any)._id.toString(),
+						id: user._id.toString(),
 						name: user.name,
 						username: user.username,
 						email: user.email,
@@ -92,3 +94,5 @@ export const authOptions: NextAuthOptions = {
 	},
 	secret: process.env.NEXTAUTH_SECRET,
 };
+
+export const auth = NextAuth(authOptions);

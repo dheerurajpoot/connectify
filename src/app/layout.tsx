@@ -6,6 +6,7 @@ import { DesktopSidebar } from "@/components/desktop-sidebar";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
+import { Providers } from "@/components/providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -66,25 +67,33 @@ export default function RootLayout({
 		<html lang='en' suppressHydrationWarning>
 			<head>
 				<link rel='manifest' href='/manifest.json' />
-				<link rel='apple-touch-icon' href='/icon-192x192.png' />
+				<link
+					rel='icon'
+					href='/placeholder-logo.svg'
+					type='image/svg+xml'
+				/>
+				<link rel='apple-touch-icon' href='/placeholder-logo.svg' />
 				<meta name='apple-mobile-web-app-capable' content='yes' />
+				<meta name='theme-color' content='#000000' />
 			</head>
 			<body
 				className={cn("min-h-screen", inter.className)}
 				suppressHydrationWarning>
-				<ThemeProvider
-					attribute='class'
-					defaultTheme='system'
-					enableSystem
-					disableTransitionOnChange>
-					<div className='flex h-full'>
-						<DesktopSidebar className='hidden md:flex' />
-						<main className='flex-1 pb-16 md:pb-0 md:pl-64'>
-							{children}
-						</main>
-						<MobileNavbar className='fixed bottom-0 z-50 w-full md:hidden' />
-					</div>
-				</ThemeProvider>
+				<Providers>
+					<ThemeProvider
+						attribute='class'
+						defaultTheme='system'
+						enableSystem
+						disableTransitionOnChange>
+						<div className='flex h-full'>
+							<DesktopSidebar className='hidden md:flex' />
+							<main className='flex-1 pb-16 md:pb-0 md:pl-64'>
+								{children}
+							</main>
+							<MobileNavbar className='fixed bottom-0 z-50 w-full md:hidden' />
+						</div>
+					</ThemeProvider>
+				</Providers>
 			</body>
 		</html>
 	);

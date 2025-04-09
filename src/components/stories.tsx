@@ -15,6 +15,7 @@ import {
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import { useToast } from "../hooks/use-toast";
+
 interface Story {
 	_id: string;
 	userId: string;
@@ -36,7 +37,7 @@ export function Stories() {
 	const [storyFile, setStoryFile] = useState<File | null>(null);
 	const [isUploading, setIsUploading] = useState(false);
 	const { toast } = useToast();
-	const { data: session } = useSession();
+	const { data: session, status } = useSession();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
@@ -58,8 +59,10 @@ export function Stories() {
 			}
 		};
 
-		fetchStories();
-	}, []);
+		if (status === "authenticated") {
+			fetchStories();
+		}
+	}, [status]);
 
 	const scroll = (direction: "left" | "right") => {
 		if (scrollRef.current) {
@@ -139,58 +142,13 @@ export function Stories() {
 		}
 	};
 
-	// Mock data for development
-	const storyUsers = [
-		{
-			name: "You",
-			username: "you",
-			avatar:
-				session?.user?.image || "/placeholder.svg?height=48&width=48",
-			hasStory: false,
-		},
-		{
-			name: "Emma",
-			username: "emma",
-			avatar: "/placeholder.svg?height=48&width=48",
-			hasStory: true,
-		},
-		{
-			name: "Alex",
-			username: "alex",
-			avatar: "/placeholder.svg?height=48&width=48",
-			hasStory: true,
-		},
-		{
-			name: "Julie",
-			username: "julie",
-			avatar: "/placeholder.svg?height=48&width=48",
-			hasStory: true,
-		},
-		{
-			name: "Michael",
-			username: "michael",
-			avatar: "/placeholder.svg?height=48&width=48",
-			hasStory: true,
-		},
-		{
-			name: "Sarah",
-			username: "sarah",
-			avatar: "/placeholder.svg?height=48&width=48",
-			hasStory: true,
-		},
-		{
-			name: "David",
-			username: "david",
-			avatar: "/placeholder.svg?height=48&width=48",
-			hasStory: true,
-		},
-		{
-			name: "Jessica",
-			username: "jessica",
-			avatar: "/placeholder.svg?height=48&width=48",
-			hasStory: true,
-		},
-	];
+	if (status === "loading") {
+		return <div>Loading...</div>;
+	}
+
+	if (status === "unauthenticated") {
+		return null;
+	}
 
 	return (
 		<>
@@ -297,35 +255,41 @@ export function Stories() {
 					</div>
 
 					{/* Other stories */}
-					{storyUsers.slice(1).map((user, i) => (
-						<Dialog key={i}>
+					{stories.map((story) => (
+						<Dialog key={story._id}>
 							<DialogTrigger asChild>
-								<div className='flex flex-col items-center gap-1 cursor-pointer'>
-									<div
-										className={`relative rounded-full p-[2px] ${
-											user.hasStory
-												? "bg-gradient-to-tr from-pink-500 to-orange-400"
-												: ""
-										}`}>
+								<div
+									className='flex flex-col items-center gap-1 cursor-pointer'
+									onClick={() => handleStoryClick(story)}>
+									<div className='relative rounded-full p-[2px] bg-gradient-to-tr from-pink-500 to-orange-400'>
 										<Avatar className='h-16 w-16 border-2 border-background'>
 											<AvatarImage
-												src={user.avatar}
-												alt={user.name}
+												src={
+													story.user?.avatar ||
+													"/placeholder.svg?height=48&width=48"
+												}
+												alt={story.user?.name || "User"}
 											/>
 											<AvatarFallback>
-												{user.name.slice(0, 2)}
+												{story.user?.name?.slice(
+													0,
+													2
+												) || "U"}
 											</AvatarFallback>
 										</Avatar>
 									</div>
 									<span className='text-xs text-muted-foreground'>
-										{user.name}
+										{story.user?.name || "User"}
 									</span>
 								</div>
 							</DialogTrigger>
 							<DialogContent className='sm:max-w-md p-0 overflow-hidden'>
 								<div className='relative aspect-[9/16] w-full'>
 									<Image
-										src='/placeholder.svg?height=800&width=450'
+										src={
+											story.media ||
+											"/placeholder.svg?height=800&width=450"
+										}
 										alt='Story'
 										fill
 										className='object-cover'
@@ -334,15 +298,24 @@ export function Stories() {
 										<div className='flex items-center gap-2'>
 											<Avatar className='h-8 w-8'>
 												<AvatarImage
-													src={user.avatar}
-													alt={user.name}
+													src={
+														story.user?.avatar ||
+														"/placeholder.svg?height=32&width=32"
+													}
+													alt={
+														story.user?.name ||
+														"User"
+													}
 												/>
 												<AvatarFallback>
-													{user.name.slice(0, 2)}
+													{story.user?.name?.slice(
+														0,
+														2
+													) || "U"}
 												</AvatarFallback>
 											</Avatar>
 											<span className='text-sm font-medium text-white'>
-												{user.name}
+												{story.user?.name}
 											</span>
 										</div>
 										<Button

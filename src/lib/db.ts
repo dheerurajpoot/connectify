@@ -57,9 +57,23 @@ export async function getUserById(id: string) {
 	return User.findById(id);
 }
 
-export async function getUserByUsername(username: string) {
+export async function getUserByUsername(
+	username: string
+): Promise<(IUser & { _id: Types.ObjectId }) | null> {
 	await connectDB();
-	return User.findOne({ username });
+
+	const sanitizedUsername = String(username).trim().toLowerCase();
+
+	const user = await User.findOne({ username: sanitizedUsername })
+		.populate("followers", "name username avatar")
+		.populate("following", "name username avatar")
+		.exec();
+
+	if (!user) {
+		return null;
+	}
+
+	return user as IUser & { _id: Types.ObjectId };
 }
 
 export async function getUserByEmail(email: string) {
