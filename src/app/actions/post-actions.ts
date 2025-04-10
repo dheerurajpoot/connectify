@@ -109,7 +109,7 @@ export async function likeUnlikePost(postId: string, isLiked: boolean) {
 			const post = await getPostById(postId);
 			if (post && post.userId.toString() !== session.user.id) {
 				const notificationData: NotificationInput = {
-					userId: new Types.ObjectId(post.userId.toString()),
+					userId: post.userId,
 					type: "like",
 					actorId: new Types.ObjectId(session.user.id),
 					postId: new Types.ObjectId(postId),
@@ -181,24 +181,70 @@ export async function getFeed(page = 1) {
 		const posts = await getFeedPosts(session.user.id, page);
 
 		// Convert MongoDB documents to plain objects
-		const plainPosts = posts.map((post) => {
-			const plainPost = post.toObject();
-			return {
-				...plainPost,
+		const plainPosts = posts.map((post: any) => {
+			const plainPost = {
+				...post.toObject(),
 				_id: (post as any)._id.toString(),
 				userId: {
 					...(post as any).userId.toObject(),
 					_id: (post as any).userId._id.toString(),
 				},
+				media: post.media || [],
+				likes: post.likes?.map((id: any) => id.toString()) || [],
+				comments: post.comments?.map((id: any) => id.toString()) || [],
 				createdAt: (post as any).createdAt.toISOString(),
 				updatedAt: (post as any).updatedAt.toISOString(),
 			};
+			return plainPost;
 		});
 
 		return { success: true, posts: plainPosts };
 	} catch (error) {
 		console.error("Get feed error:", error);
 		return { error: "Failed to get feed" };
+	}
+}
+
+export async function getPost(id: string) {
+	try {
+		const post = await getPostById(id);
+		if (!post) {
+			return { error: "Post not found" };
+		}
+
+		// Convert MongoDB document to plain object
+		const plainPost = {
+			...post.toObject(),
+			_id: (post as any)._id.toString(),
+			userId: {
+				...(post as any).userId.toObject(),
+				_id: (post as any).userId._id.toString(),
+			},
+			media: post.media || [],
+			likes: post.likes || [],
+			shares: post.shares || [],
+			comments:
+				post.comments?.map((comment: any) => ({
+					id: comment._id.toString(),
+					_id: comment._id.toString(),
+					user: {
+						_id: comment.user._id.toString(),
+						name: comment.user.name,
+						username: comment.user.username,
+						avatar: comment.user.avatar,
+					},
+					content: comment.content,
+					timePosted: comment.createdAt.toISOString(),
+					likes: comment.likes || [],
+				})) || [],
+			createdAt: (post as any).createdAt.toISOString(),
+			updatedAt: (post as any).updatedAt.toISOString(),
+		};
+
+		return { success: true, post: plainPost };
+	} catch (error) {
+		console.error("Get post error:", error);
+		return { error: "Failed to get post" };
 	}
 }
 

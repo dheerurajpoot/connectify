@@ -156,7 +156,15 @@ export async function createPost(
 
 export async function getPostById(id: string) {
 	await connectDB();
-	return Post.findById(id).populate("userId", "name username avatar");
+	return Post.findById(id)
+		.populate("userId", "name username avatar")
+		.populate({
+			path: "comments",
+			populate: {
+				path: "user",
+				select: "name username avatar",
+			},
+		});
 }
 
 export async function getFeedPosts(userId: string, page = 1, limit = 10) {
@@ -197,15 +205,13 @@ export async function likePost(postId: string, userId: string) {
 	return post;
 }
 
-export async function unlikePost(userId: string, postId: string) {
+export async function unlikePost(postId: string, userId: string) {
 	await connectDB();
 
 	const post = await Post.findById(postId);
 	if (!post) throw new Error("Post not found");
 
-	post.likes = post.likes.filter(
-		(id) => (Types.ObjectId.isValid(id) ? id.toString() : id) !== userId
-	);
+	post.likes = post.likes.filter((id) => id.toString() !== userId);
 	await post.save();
 
 	return post;

@@ -7,6 +7,7 @@ export interface IPost extends Document {
 	media?: string[];
 	likes: mongoose.Types.ObjectId[];
 	comments: mongoose.Types.ObjectId[];
+	shares: mongoose.Types.ObjectId[];
 	createdAt: Date;
 	updatedAt: Date;
 }
@@ -19,6 +20,7 @@ const PostSchema = new Schema<IPost>(
 		media: [{ type: String }],
 		likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
 		comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
+		shares: [{ type: Schema.Types.ObjectId, ref: "User" }],
 	},
 	{ timestamps: true }
 );
