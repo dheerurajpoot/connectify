@@ -26,16 +26,17 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { format } from "timeago.js";
 
 interface PostProps {
 	post: {
 		id: string;
-		user: {
+		userId: {
 			name: string;
 			username: string;
 			avatar: string;
 		};
-		timePosted: string;
+		createdAt: string;
 		content: string;
 		media: string[];
 		likes: number;
@@ -67,31 +68,31 @@ export function Post({ post }: PostProps) {
 	};
 
 	return (
-		<Card className='overflow-hidden border-none shadow-md transition-all duration-300 hover:shadow-lg dark:bg-gray-900 dark:shadow-gray-800/20'>
+		<Card className='overflow-hidden border-none flex-col gap-0.5 py-0 shadow-md transition-all duration-300 hover:shadow-lg dark:bg-gray-900 dark:shadow-gray-800/20'>
 			<CardHeader className='flex flex-row items-center gap-3 p-4'>
 				<Link
-					href={`/profile/${post.user.username}`}
+					href={`/profile/${post.userId.username}`}
 					className='transition-transform duration-200 hover:scale-105'>
 					<Avatar className='border-2 border-primary/10'>
 						<AvatarImage
-							src={post.user.avatar}
-							alt={post.user.name}
+							src={post.userId.avatar}
+							alt={post.userId.name}
 						/>
 						<AvatarFallback>
-							{post.user.name.slice(0, 2)}
+							{post.userId.name.slice(0, 2)}
 						</AvatarFallback>
 					</Avatar>
 				</Link>
 				<div className='flex-1'>
 					<div className='flex items-center gap-1'>
 						<Link
-							href={`/profile/${post.user.username}`}
+							href={`/profile/${post.userId.username}`}
 							className='font-semibold hover:underline'>
-							{post.user.name}
+							{post.userId.name}
 						</Link>
 					</div>
 					<p className='text-xs text-muted-foreground'>
-						{post.timePosted}
+						{format(post.createdAt)}
 					</p>
 				</div>
 				<DropdownMenu>
@@ -110,7 +111,7 @@ export function Post({ post }: PostProps) {
 							Report Post
 						</DropdownMenuItem>
 						<DropdownMenuItem className='cursor-pointer rounded-lg'>
-							Unfollow @{post.user.username}
+							Unfollow @{post.userId.username}
 						</DropdownMenuItem>
 						<DropdownMenuItem className='cursor-pointer rounded-lg'>
 							Copy Link
@@ -130,7 +131,8 @@ export function Post({ post }: PostProps) {
 					<div className='relative aspect-square w-full overflow-hidden'>
 						<Image
 							src={post.media[0] || "/placeholder.svg"}
-							alt='Post image'
+							alt={post.content || "Post image"}
+							sizes='99vw'
 							fill
 							className='object-cover transition-transform duration-500 hover:scale-105'
 						/>

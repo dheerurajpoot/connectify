@@ -5,6 +5,7 @@ import {
 	followUser,
 	unfollowUser,
 	updateUser,
+	getUserPosts,
 } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -15,6 +16,7 @@ export async function getProfileData(username: string) {
 		if (!user) {
 			return { error: "User not found" };
 		}
+		const posts = await getUserPosts(user._id.toString());
 
 		const session = await getServerSession(authOptions);
 		const isFollowing = user.followers?.some(
@@ -24,6 +26,7 @@ export async function getProfileData(username: string) {
 
 		return {
 			user,
+			posts,
 			isFollowing,
 			isOwnProfile,
 		};

@@ -180,7 +180,22 @@ export async function getFeed(page = 1) {
 
 		const posts = await getFeedPosts(session.user.id, page);
 
-		return { success: true, posts };
+		// Convert MongoDB documents to plain objects
+		const plainPosts = posts.map((post) => {
+			const plainPost = post.toObject();
+			return {
+				...plainPost,
+				_id: (post as any)._id.toString(),
+				userId: {
+					...(post as any).userId.toObject(),
+					_id: (post as any).userId._id.toString(),
+				},
+				createdAt: (post as any).createdAt.toISOString(),
+				updatedAt: (post as any).updatedAt.toISOString(),
+			};
+		});
+
+		return { success: true, posts: plainPosts };
 	} catch (error) {
 		console.error("Get feed error:", error);
 		return { error: "Failed to get feed" };

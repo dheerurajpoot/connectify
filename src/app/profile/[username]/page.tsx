@@ -46,10 +46,8 @@ export default async function ProfilePage({ params }: Props) {
 		redirect("/auth/login");
 	}
 
-	const { user, isFollowing, isOwnProfile, error } = await getProfileData(
-		username
-	);
-
+	const { user, posts, isFollowing, isOwnProfile, error } =
+		await getProfileData(username);
 	if (error || !user) {
 		notFound();
 	}
@@ -150,7 +148,7 @@ export default async function ProfilePage({ params }: Props) {
 				</TabsList>
 				<TabsContent value='posts'>
 					<Suspense fallback={<ProfileSkeleton />}>
-						<ProfilePosts username={user.username} />
+						<ProfilePosts posts={posts} />
 					</Suspense>
 				</TabsContent>
 				<TabsContent value='followers'>
