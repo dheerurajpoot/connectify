@@ -46,13 +46,14 @@ export function CreatePostForm() {
 			const formData = new FormData();
 			formData.append("content", postText);
 
-			// In a real app, you would append the actual image files
-			// For now, we'll just simulate it
-			if (images.length > 0) {
-				formData.append("media", "placeholder.jpg");
+			if (fileInputRef.current?.files) {
+				for (const file of fileInputRef.current.files) {
+					formData.append("media", file);
+				}
 			}
 
 			const result = await createNewPost(formData);
+			console.log("Result", result);
 
 			if (result?.error) {
 				toast({
@@ -97,7 +98,7 @@ export function CreatePostForm() {
 					<div className='flex-1'>
 						<Textarea
 							placeholder="What's on your mind?"
-							className='min-h-32 border-none px-0 focus-visible:ring-0'
+							className='min-h-12 border-none px-2 focus-visible:ring-0'
 							value={postText}
 							onChange={(e) => setPostText(e.target.value)}
 						/>

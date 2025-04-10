@@ -26,9 +26,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { likeUnlikePost, addPostComment } from "@/app/actions/post-actions";
-import { useSession } from "next-auth/react";
-import { useToast } from "../hooks/use-toast";
+
 interface PostProps {
 	post: {
 		id: string;
@@ -51,82 +49,30 @@ export function Post({ post }: PostProps) {
 	const [bookmarked, setBookmarked] = useState(false);
 	const [showComments, setShowComments] = useState(false);
 	const [likesCount, setLikesCount] = useState(post.likes);
-	const [commentText, setCommentText] = useState("");
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const { toast } = useToast();
-	const { data: session } = useSession();
+	const [commentsCount, setCommentsCount] = useState(post.comments);
+	const [sharesCount, setSharesCount] = useState(post.shares);
 
-	const handleLike = async () => {
-		try {
-			// Optimistic update
-			if (liked) {
-				setLikesCount(likesCount - 1);
-			} else {
-				setLikesCount(likesCount + 1);
-			}
-			setLiked(!liked);
-
-			// Server update
-			const result = await likeUnlikePost(post.id, liked);
-
-			if (result?.error) {
-				// Revert optimistic update if there's an error
-				setLiked(liked);
-				setLikesCount(liked ? likesCount : likesCount - 1);
-
-				toast({
-					title: "Error",
-					description: result.error,
-					variant: "destructive",
-				});
-			}
-		} catch (error) {
-			// Revert optimistic update if there's an error
-			setLiked(liked);
-			setLikesCount(liked ? likesCount : likesCount - 1);
-
-			toast({
-				title: "Error",
-				description: "Something went wrong. Please try again.",
-				variant: "destructive",
-			});
+	const handleLike = () => {
+		if (liked) {
+			setLikesCount(likesCount - 1);
+		} else {
+			setLikesCount(likesCount + 1);
 		}
+		setLiked(!liked);
 	};
 
-	const handleComment = async () => {
-		if (!commentText.trim()) return;
-
-		setIsSubmitting(true);
-
-		try {
-			const result = await addPostComment(post.id, commentText);
-
-			if (result?.error) {
-				toast({
-					title: "Error",
-					description: result.error,
-					variant: "destructive",
-				});
-			} else {
-				setCommentText("");
-				// In a real app, you would add the new comment to the comments list
-			}
-		} catch (error) {
-			toast({
-				title: "Error",
-				description: "Something went wrong. Please try again.",
-				variant: "destructive",
-			});
-		} finally {
-			setIsSubmitting(false);
-		}
+	const handleShare = () => {
+		setSharesCount(sharesCount + 1);
+		// In a real app, you would implement actual sharing functionality
 	};
 
 	return (
-		<Card className='overflow-hidden'>
+		<Card className='overflow-hidden border-none shadow-md transition-all duration-300 hover:shadow-lg dark:bg-gray-900 dark:shadow-gray-800/20'>
 			<CardHeader className='flex flex-row items-center gap-3 p-4'>
-				<Link href={`/profile/${post.user.username}`}>
-					<Avatar>
+				<Link
+					href={`/profile/${post.user.username}`}
+					className='transition-transform duration-200 hover:scale-105'>
+					<Avatar className='border-2 border-primary/10'>
 						<AvatarImage
 							src={post.user.avatar}
 							alt={post.user.name}
@@ -153,16 +99,22 @@ export function Post({ post }: PostProps) {
 						<Button
 							variant='ghost'
 							size='icon'
-							className='rounded-full'>
+							className='rounded-full hover:bg-gray-100 dark:hover:bg-gray-800'>
 							<MoreHorizontal className='h-5 w-5' />
 						</Button>
 					</DropdownMenuTrigger>
-					<DropdownMenuContent align='end'>
-						<DropdownMenuItem>Report Post</DropdownMenuItem>
-						<DropdownMenuItem>
+					<DropdownMenuContent
+						align='end'
+						className='w-48 rounded-xl p-1'>
+						<DropdownMenuItem className='cursor-pointer rounded-lg'>
+							Report Post
+						</DropdownMenuItem>
+						<DropdownMenuItem className='cursor-pointer rounded-lg'>
 							Unfollow @{post.user.username}
 						</DropdownMenuItem>
-						<DropdownMenuItem>Copy Link</DropdownMenuItem>
+						<DropdownMenuItem className='cursor-pointer rounded-lg'>
+							Copy Link
+						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</CardHeader>
@@ -175,45 +127,79 @@ export function Post({ post }: PostProps) {
 					</div>
 				)}
 				{post.media.length > 0 && (
-					<div className='relative aspect-square w-full'>
+					<div className='relative aspect-square w-full overflow-hidden'>
 						<Image
 							src={post.media[0] || "/placeholder.svg"}
 							alt='Post image'
 							fill
-							className='object-cover'
+							className='object-cover transition-transform duration-500 hover:scale-105'
 						/>
 					</div>
 				)}
 			</CardContent>
 			<CardFooter className='flex flex-col p-0'>
-				<div className='flex items-center justify-between px-4 py-2'>
-					<div className='flex items-center gap-3'>
-						<Button
-							variant='ghost'
-							size='icon'
-							onClick={handleLike}
-							disabled={!session}>
-							<Heart
-								className={`h-5 w-5 ${
-									liked ? "fill-red-500 text-red-500" : ""
-								}`}
-							/>
-						</Button>
-						<Button
-							variant='ghost'
-							size='icon'
-							onClick={() => setShowComments(!showComments)}>
-							<MessageCircle className='h-5 w-5' />
-						</Button>
-						<Button variant='ghost' size='icon'>
-							<Share2 className='h-5 w-5' />
-						</Button>
+				<div className='flex items-center justify-between border-t border-gray-100 px-4 py-3 dark:border-gray-800'>
+					<div className='flex items-center gap-6'>
+						<div className='flex items-center gap-1.5'>
+							<Button
+								variant='ghost'
+								size='icon'
+								onClick={handleLike}
+								className={`rounded-full ${
+									liked
+										? "bg-red-50 dark:bg-red-900/20"
+										: "hover:bg-gray-100 dark:hover:bg-gray-800"
+								}`}>
+								<Heart
+									className={`h-5 w-5 ${
+										liked ? "fill-red-500 text-red-500" : ""
+									}`}
+								/>
+							</Button>
+							<span
+								className={`text-sm font-medium ${
+									liked ? "text-red-500" : ""
+								}`}>
+								{likesCount}
+							</span>
+						</div>
+
+						<div className='flex items-center gap-1.5'>
+							<Button
+								variant='ghost'
+								size='icon'
+								onClick={() => setShowComments(!showComments)}
+								className='rounded-full hover:bg-gray-100 dark:hover:bg-gray-800'>
+								<MessageCircle className='h-5 w-5' />
+							</Button>
+							<span className='text-sm font-medium'>
+								{commentsCount}
+							</span>
+						</div>
+
+						<div className='flex items-center gap-1.5'>
+							<Button
+								variant='ghost'
+								size='icon'
+								onClick={handleShare}
+								className='rounded-full hover:bg-gray-100 dark:hover:bg-gray-800'>
+								<Share2 className='h-5 w-5' />
+							</Button>
+							<span className='text-sm font-medium'>
+								{sharesCount}
+							</span>
+						</div>
 					</div>
+
 					<Button
 						variant='ghost'
 						size='icon'
 						onClick={() => setBookmarked(!bookmarked)}
-						disabled={!session}>
+						className={`rounded-full ${
+							bookmarked
+								? "bg-primary/10"
+								: "hover:bg-gray-100 dark:hover:bg-gray-800"
+						}`}>
 						<Bookmark
 							className={`h-5 w-5 ${
 								bookmarked ? "fill-current" : ""
@@ -222,15 +208,11 @@ export function Post({ post }: PostProps) {
 					</Button>
 				</div>
 
-				<div className='px-4 py-1'>
-					<p className='text-sm font-medium'>{likesCount} likes</p>
-				</div>
-
 				{showComments && (
-					<div className='border-t p-4'>
+					<div className='border-t border-gray-100 p-4 dark:border-gray-800'>
 						<div className='mb-4 space-y-3'>
 							<div className='flex items-start gap-2'>
-								<Avatar className='h-7 w-7'>
+								<Avatar className='h-7 w-7 border border-primary/10'>
 									<AvatarImage
 										src='/placeholder.svg?height=28&width=28'
 										alt='Comment user'
@@ -246,63 +228,38 @@ export function Post({ post }: PostProps) {
 									</div>
 									<div className='mt-1 flex items-center gap-2 text-xs text-muted-foreground'>
 										<span>1h</span>
-										<span>Like</span>
-										<span>Reply</span>
+										<span className='cursor-pointer hover:text-primary'>
+											Like
+										</span>
+										<span className='cursor-pointer hover:text-primary'>
+											Reply
+										</span>
 									</div>
 								</div>
 							</div>
 						</div>
 
-						{session ? (
-							<div className='flex items-center gap-2'>
-								<Avatar className='h-7 w-7'>
-									<AvatarImage
-										src={
-											session.user?.image ||
-											"/placeholder.svg?height=28&width=28"
-										}
-										alt={session.user?.name || "User"}
-									/>
-									<AvatarFallback>
-										{session.user?.name?.slice(0, 2) || "U"}
-									</AvatarFallback>
-								</Avatar>
-								<div className='relative flex-1'>
-									<Input
-										value={commentText}
-										onChange={(e) =>
-											setCommentText(e.target.value)
-										}
-										placeholder='Add a comment...'
-										className='pr-10'
-										onKeyDown={(e) => {
-											if (e.key === "Enter") {
-												handleComment();
-											}
-										}}
-									/>
-									<Button
-										variant='ghost'
-										size='icon'
-										className='absolute right-1 top-1/2 -translate-y-1/2'
-										onClick={handleComment}
-										disabled={
-											isSubmitting || !commentText.trim()
-										}>
-										<Send className='h-4 w-4' />
-									</Button>
-								</div>
+						<div className='flex items-center gap-2'>
+							<Avatar className='h-7 w-7 border border-primary/10'>
+								<AvatarImage
+									src='/placeholder.svg?height=28&width=28'
+									alt='User'
+								/>
+								<AvatarFallback>ME</AvatarFallback>
+							</Avatar>
+							<div className='relative flex-1'>
+								<Input
+									placeholder='Add a comment...'
+									className='rounded-full border-gray-200 bg-gray-50 pr-10 focus-visible:ring-primary/50 dark:border-gray-700 dark:bg-gray-800'
+								/>
+								<Button
+									variant='ghost'
+									size='icon'
+									className='absolute right-1 top-1/2 -translate-y-1/2 rounded-full text-primary hover:bg-primary/10'>
+									<Send className='h-4 w-4' />
+								</Button>
 							</div>
-						) : (
-							<p className='text-center text-sm text-muted-foreground'>
-								<Link
-									href='/auth/login'
-									className='text-primary hover:underline'>
-									Log in
-								</Link>{" "}
-								to add a comment
-							</p>
-						)}
+						</div>
 					</div>
 				)}
 			</CardFooter>
