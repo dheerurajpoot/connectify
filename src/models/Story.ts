@@ -22,6 +22,6 @@ const StorySchema = new Schema<IStory>(
 
 // Create and export the model
 const Story: Model<IStory> =
-	mongoose.models.Story || mongoose.model<IStory>("Story", StorySchema);
+	mongoose.models?.Story || mongoose.model<IStory>("Story", StorySchema);
 
 export default Story;

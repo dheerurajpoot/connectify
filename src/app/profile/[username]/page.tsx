@@ -79,7 +79,7 @@ export default async function ProfilePage({ params }: Props) {
 					<div className='ml-auto'>
 						{isOwnProfile ? (
 							<Button variant='outline' asChild>
-								<a href='/settings/profile'>Edit Profile</a>
+								<a href='/profile/edit'>Edit Profile</a>
 							</Button>
 						) : (
 							<form

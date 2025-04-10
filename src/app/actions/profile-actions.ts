@@ -1,6 +1,11 @@
 "use server";
 
-import { getUserByUsername, followUser, unfollowUser } from "@/lib/db";
+import {
+	getUserByUsername,
+	followUser,
+	unfollowUser,
+	updateUser,
+} from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -50,5 +55,56 @@ export async function handleFollow(username: string, isFollowing: boolean) {
 	} catch (error) {
 		console.error("Error in follow action:", error);
 		return { error: "Failed to update follow status" };
+	}
+}
+
+export async function updateProfile(formData: FormData) {
+	try {
+		const session = await getServerSession(authOptions);
+		if (!session?.user?.id) {
+			return { error: "Not authenticated" };
+		}
+
+		const name = formData.get("name") as string;
+		const username = formData.get("username") as string;
+		const bio = formData.get("bio") as string;
+		const location = formData.get("location") as string;
+		const website = formData.get("website") as string;
+		const avatar = formData.get("avatar") as string;
+
+		// Validate inputs
+		if (!name || !username) {
+			return { error: "Name and username are required" };
+		}
+
+		// Check if username is taken by another user
+		const existingUser = await getUserByUsername(username);
+		if (existingUser && existingUser._id.toString() !== session.user.id) {
+			return { error: "Username is already taken" };
+		}
+
+		const updatedUser = await updateUser(session.user.id, {
+			name,
+			username,
+			bio,
+			location,
+			website,
+			avatar,
+		});
+
+		if (!updatedUser) {
+			return { error: "Failed to update profile" };
+		}
+
+		// Convert MongoDB document to plain object
+		const plainUser = {
+			...updatedUser.toObject(),
+			_id: updatedUser._id?.toString() || "",
+		};
+
+		return { success: true, user: plainUser };
+	} catch (error) {
+		console.error("Error updating profile:", error);
+		return { error: "Failed to update profile" };
 	}
 }

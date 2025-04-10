@@ -20,7 +20,7 @@ const CommentSchema = new Schema<IComment>(
 
 // Create and export the model
 const Comment: Model<IComment> =
-	mongoose.models.Comment ||
+	mongoose.models?.Comment ||
 	mongoose.model<IComment>("Comment", CommentSchema);
 
 export default Comment;
