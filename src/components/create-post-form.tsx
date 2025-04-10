@@ -51,9 +51,7 @@ export function CreatePostForm() {
 					formData.append("media", file);
 				}
 			}
-
 			const result = await createNewPost(formData);
-			console.log("Result", result);
 
 			if (result?.error) {
 				toast({

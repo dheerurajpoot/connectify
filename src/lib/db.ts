@@ -161,7 +161,7 @@ export async function getPostById(id: string) {
 		.populate({
 			path: "comments",
 			populate: {
-				path: "user",
+				path: "userId",
 				select: "name username avatar",
 			},
 		});
@@ -175,13 +175,24 @@ export async function getFeedPosts(userId: string, page = 1, limit = 10) {
 
 	const skip = (page - 1) * limit;
 
+	// Get posts from following users and latest posts from all users
 	return Post.find({
-		userId: { $in: [...user.following, userId] },
+		$or: [
+			{ userId: { $in: [...user.following, userId] } },
+			{ createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } }, // Posts from last 24 hours
+		],
 	})
 		.sort({ createdAt: -1 })
 		.skip(skip)
 		.limit(limit)
-		.populate("userId", "name username avatar");
+		.populate("userId", "name username avatar")
+		.populate({
+			path: "comments",
+			populate: {
+				path: "userId",
+				select: "name username avatar",
+			},
+		});
 }
 
 export async function getUserPosts(userId: string) {
@@ -229,6 +240,7 @@ export async function addComment(
 	const newComment = new Comment({
 		...commentData,
 		postId,
+		userId: commentData.userId,
 	});
 
 	await newComment.save();

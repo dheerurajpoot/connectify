@@ -7,16 +7,13 @@ import {
 	addComment,
 	getFeedPosts,
 	getExplorePosts,
-	getUserPosts,
 	getPostById,
-	getUserByUsername,
 } from "@/lib/db";
 import { createNotification } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { Types } from "mongoose";
-import { IPost, IComment, INotification } from "@/models";
 import { uploadImage } from "@/lib/image-utils";
 
 type CreatePostInput = {
@@ -33,7 +30,7 @@ type CommentInput = {
 
 type NotificationInput = {
 	userId: Types.ObjectId;
-	type: "like" | "comment";
+	type: "like" | "comment" | "share";
 	actorId: Types.ObjectId;
 	postId: Types.ObjectId;
 	commentId?: Types.ObjectId;
@@ -151,7 +148,7 @@ export async function addPostComment(postId: string, content: string) {
 		const post = await getPostById(postId);
 		if (post && post.userId.toString() !== session.user.id) {
 			const notificationData: NotificationInput = {
-				userId: new Types.ObjectId(post.userId.toString()),
+				userId: post.userId,
 				type: "comment",
 				actorId: new Types.ObjectId(session.user.id),
 				postId: new Types.ObjectId(postId),
@@ -162,8 +159,22 @@ export async function addPostComment(postId: string, content: string) {
 			await createNotification(notificationData as any);
 		}
 
-		revalidatePath("/");
-		return { success: true, comment };
+		// Convert comment to plain object and format dates/IDs
+		const plainComment = {
+			...comment.toObject(),
+			_id: (comment as any)._id.toString(),
+			userId: {
+				_id: (comment as any).userId._id.toString(),
+				name: (comment as any).userId.name,
+				username: (comment as any).userId.username,
+				avatar: (comment as any).userId.avatar,
+			},
+			postId: (comment as any).postId.toString(),
+			createdAt: (comment as any).createdAt.toISOString(),
+			updatedAt: (comment as any).updatedAt.toISOString(),
+		};
+
+		return { success: true, comment: plainComment };
 	} catch (error) {
 		console.error("Add comment error:", error);
 		return { error: "Failed to add comment" };
@@ -191,7 +202,19 @@ export async function getFeed(page = 1) {
 				},
 				media: post.media || [],
 				likes: post.likes?.map((id: any) => id.toString()) || [],
-				comments: post.comments?.map((id: any) => id.toString()) || [],
+				comments:
+					post.comments?.map((comment: any) => ({
+						_id: comment._id.toString(),
+						content: comment.content,
+						userId: {
+							_id: comment.userId._id.toString(),
+							name: comment.userId.name,
+							username: comment.userId.username,
+							avatar: comment.userId.avatar,
+						},
+						createdAt: comment.createdAt.toISOString(),
+						updatedAt: comment.updatedAt.toISOString(),
+					})) || [],
 				createdAt: (post as any).createdAt.toISOString(),
 				updatedAt: (post as any).updatedAt.toISOString(),
 			};
@@ -265,36 +288,49 @@ export async function getExplore(category?: string, page = 1) {
 	}
 }
 
-export async function getUserProfile(username: string) {
+export async function sharePost(postId: string) {
 	try {
 		const session = await getServerSession(authOptions);
 
 		if (!session || !session.user) {
-			return { error: "You must be logged in to view profiles" };
+			return { error: "You must be logged in to share a post" };
 		}
 
-		const user = await getUserByUsername(username);
-
-		if (!user) {
-			return { error: "User not found" };
+		const post = await getPostById(postId);
+		if (!post) {
+			return { error: "Post not found" };
 		}
 
-		const posts = await getUserPosts(user._id.toString());
-
-		// Don't return sensitive information
-		const { password, ...userWithoutPassword } = user;
-
-		return {
-			success: true,
-			user: userWithoutPassword,
-			posts,
-			isCurrentUser: user._id.toString() === session.user.id,
-			isFollowing:
-				user.followers?.includes(new Types.ObjectId(session.user.id)) ||
-				false,
+		// Create a new post with shared content
+		const sharedPostData = {
+			userId: new Types.ObjectId(session.user.id),
+			content: `Shared from @${(post as any).userId.username}`,
+			media: post.media,
+			sharedFrom: post._id,
 		};
+
+		const sharedPost = await createPost(sharedPostData as any);
+
+		// Convert shared post to plain object
+		const plainPost = {
+			...sharedPost.toObject(),
+			_id: (sharedPost as any)._id.toString(),
+			userId: {
+				_id: (sharedPost as any).userId.toString(),
+				name: session.user.name,
+				username: session.user.username,
+				avatar: session.user.image,
+			},
+			media: sharedPost.media || [],
+			likes: [],
+			comments: [],
+			createdAt: (sharedPost as any).createdAt.toISOString(),
+			updatedAt: (sharedPost as any).updatedAt.toISOString(),
+		};
+
+		return { success: true, post: plainPost };
 	} catch (error) {
-		console.error("Get user profile error:", error);
-		return { error: "Failed to get user profile" };
+		console.error("Share post error:", error);
+		return { error: "Failed to share post" };
 	}
 }
