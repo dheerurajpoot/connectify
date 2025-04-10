@@ -57,8 +57,9 @@ export async function createNewPost(formData: FormData) {
 
 		const media = [];
 		for (const file of mediaFiles) {
-			if (typeof file === "object" && file !== null) {
-				const buffer = Buffer.from(await (file as any).text());
+			if (file instanceof File) {
+				const arrayBuffer = await file.arrayBuffer();
+				const buffer = Buffer.from(arrayBuffer);
 				const imgUrl = await uploadImage(buffer);
 				media.push(imgUrl);
 			}
@@ -71,9 +72,20 @@ export async function createNewPost(formData: FormData) {
 		};
 
 		const post = await createPost(postData as any);
+		if (!post) {
+			return { error: "Failed to create post" };
+		}
 
-		// revalidatePath("/");
-		return { success: true, post };
+		// Convert post to plain object to avoid serialization issues
+		const plainPost = {
+			...post.toObject(),
+			_id: (post as any)._id.toString(),
+			userId: (post as any).userId.toString(),
+			createdAt: (post as any).createdAt.toISOString(),
+			updatedAt: (post as any).updatedAt.toISOString(),
+		};
+
+		return { success: true, post: plainPost };
 	} catch (error) {
 		console.error("Create post error:", error);
 		return { error: "Failed to create post" };
