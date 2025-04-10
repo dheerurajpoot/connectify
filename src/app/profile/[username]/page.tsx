@@ -2,40 +2,50 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ProfilePosts } from "@/components/profile-posts";
-import { ProfileAbout } from "@/components/profile-about";
 import { ProfileFollowers } from "@/components/profile-followers";
 import { Suspense } from "react";
 import { ProfileSkeleton } from "@/components/skeletons/profile-skeleton";
 import type { Metadata } from "next";
 import { getProfileData, handleFollow } from "@/app/actions/profile-actions";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import Link from "next/link";
 
 type Props = {
 	params: { username: string };
 };
 
-// export async function generateMetadata({ params }: Props): Promise<Metadata> {
-// 	const { user } = await getProfileData(params.username);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+	const { username } = await params;
+	const { user } = await getProfileData(username);
 
-// 	if (!user) {
-// 		return {
-// 			title: "User not found",
-// 			description: "The requested user could not be found",
-// 		};
-// 	}
+	if (!user) {
+		return {
+			title: "User not found",
+			description: "The requested user could not be found",
+		};
+	}
 
-// 	return {
-// 		title: `${user.name} (@${user.username})`,
-// 		description: user.bio || "Connect with me on Connectify",
-// 		openGraph: {
-// 			title: `${user.name} (@${user.username})`,
-// 			description: user.bio || "Connect with me on Connectify",
-// 		},
-// 	};
-// }
+	return {
+		title: `${user.name} (@${user.username})`,
+		description: user.bio || "Connect with me on Connectify",
+		openGraph: {
+			title: `${user.name} (@${user.username})`,
+			description: user.bio || "Connect with me on Connectify",
+		},
+	};
+}
 
 export default async function ProfilePage({ params }: Props) {
 	const { username } = await params;
+	const session = await getServerSession(authOptions);
+
+	// If not logged in, redirect to login
+	if (!session) {
+		redirect("/auth/login");
+	}
+
 	const { user, isFollowing, isOwnProfile, error } = await getProfileData(
 		username
 	);
@@ -46,7 +56,7 @@ export default async function ProfilePage({ params }: Props) {
 
 	return (
 		<div className='container px-4 py-6'>
-			<div className='mb-6 space-y-4'>
+			<div className='mb-6 space-y-4 flex flex-col justify-center mx-auto md:w-2/3'>
 				<div className='flex flex-col items-center gap-4 sm:flex-row'>
 					<Avatar className='h-24 w-24 border-2 border-background'>
 						<AvatarImage
@@ -91,7 +101,20 @@ export default async function ProfilePage({ params }: Props) {
 						)}
 					</div>
 				</div>
-
+				<div className='space-y-2'>
+					<p>Digital creator and photography enthusiast ✈️ 🌍 📸</p>
+					<div className='flex items-center gap-2 text-sm'>
+						<Link
+							href='https://alexjohnson.com'
+							target='_blank'
+							className='text-primary hover:underline'>
+							alexjohnson.com
+						</Link>
+					</div>
+					<p className='text-sm text-muted-foreground'>
+						San Francisco, CA • Photographer at Studio Creative
+					</p>
+				</div>
 				<div className='flex justify-around text-center'>
 					<div>
 						<p className='font-bold'>0</p>
@@ -114,17 +137,12 @@ export default async function ProfilePage({ params }: Props) {
 						</p>
 					</div>
 				</div>
-
-				{user.bio && <p>{user.bio}</p>}
 			</div>
 
 			<Tabs defaultValue='posts'>
 				<TabsList className='w-full'>
 					<TabsTrigger className='flex-1' value='posts'>
 						Posts
-					</TabsTrigger>
-					<TabsTrigger className='flex-1' value='about'>
-						About
 					</TabsTrigger>
 					<TabsTrigger className='flex-1' value='followers'>
 						Followers
@@ -134,9 +152,6 @@ export default async function ProfilePage({ params }: Props) {
 					<Suspense fallback={<ProfileSkeleton />}>
 						<ProfilePosts username={user.username} />
 					</Suspense>
-				</TabsContent>
-				<TabsContent value='about'>
-					<ProfileAbout username={user.username} />
 				</TabsContent>
 				<TabsContent value='followers'>
 					<ProfileFollowers username={user.username} />
