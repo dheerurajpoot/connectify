@@ -102,17 +102,17 @@ export default async function ProfilePage({ params }: Props) {
 					</div>
 				</div>
 				<div className='space-y-2'>
-					<p>Digital creator and photography enthusiast ✈️ 🌍 📸</p>
+					<p>{user.bio}</p>
 					<div className='flex items-center gap-2 text-sm'>
 						<Link
-							href='https://alexjohnson.com'
+							href={user.website || ""}
 							target='_blank'
-							className='text-primary hover:underline'>
-							alexjohnson.com
+							className='text-blue-400 hover:underline'>
+							{user.website}
 						</Link>
 					</div>
 					<p className='text-sm text-muted-foreground'>
-						San Francisco, CA • Photographer at Studio Creative
+						{user.location}
 					</p>
 				</div>
 				<div className='flex justify-around text-center'>

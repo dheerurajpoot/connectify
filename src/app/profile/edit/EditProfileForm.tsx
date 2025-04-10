@@ -11,10 +11,9 @@ import { useToast } from "@/components/ui/use-toast";
 
 interface EditProfileFormProps {
 	user: {
-		id: string;
+		_id: string;
 		name?: string | null;
 		email?: string | null;
-		image?: string | null;
 		username?: string;
 		bio?: string;
 		location?: string;
@@ -24,7 +23,6 @@ interface EditProfileFormProps {
 }
 
 export default function EditProfileForm({ user }: EditProfileFormProps) {
-	console.log("user", user);
 	const router = useRouter();
 	const { toast } = useToast();
 	const [isLoading, setIsLoading] = useState(false);
