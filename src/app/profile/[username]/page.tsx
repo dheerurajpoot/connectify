@@ -11,6 +11,7 @@ import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
+import { BadgeCheck } from "lucide-react";
 
 type Props = {
 	params: { username: string };
@@ -51,6 +52,7 @@ export default async function ProfilePage({ params }: Props) {
 	if (error || !user) {
 		notFound();
 	}
+	const isVerified = username === "dheerurajpoot";
 
 	return (
 		<div className='container px-4 py-6'>
@@ -70,6 +72,9 @@ export default async function ProfilePage({ params }: Props) {
 					</Avatar>
 					<div className='text-center sm:text-left'>
 						<h1 className='text-2xl font-bold'>{user.name}</h1>
+						{isVerified && (
+							<BadgeCheck className='h-5 w-5 text-blue-500' />
+						)}
 						<p className='text-muted-foreground'>
 							@{user.username}
 						</p>

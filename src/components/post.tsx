@@ -19,6 +19,7 @@ import {
 	Bookmark,
 	MoreHorizontal,
 	Send,
+	BadgeCheck,
 } from "lucide-react";
 import {
 	DropdownMenu,
@@ -99,6 +100,8 @@ export function Post({ post }: PostProps) {
 		setSharesCount((prev) => prev + 1);
 	};
 
+	const isVerified = post.userId.username === "dheerurajpoot";
+
 	return (
 		<>
 			<Card className='overflow-hidden border-none flex-col gap-0.5 py-0 shadow-md transition-all duration-300 hover:shadow-lg dark:bg-gray-900 dark:shadow-gray-800/20'>
@@ -123,6 +126,9 @@ export function Post({ post }: PostProps) {
 								className='font-semibold hover:underline'>
 								{post.userId.name}
 							</Link>
+							{isVerified && (
+								<BadgeCheck className='h-4 w-4 text-blue-500' />
+							)}
 						</div>
 						<p className='text-xs text-muted-foreground'>
 							{format(post.createdAt)}

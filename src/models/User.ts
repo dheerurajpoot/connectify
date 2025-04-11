@@ -10,6 +10,7 @@ export interface IUser extends Document {
 	bio?: string;
 	location?: string;
 	website?: string;
+	isVerified?: Boolean;
 	followers: mongoose.Types.ObjectId[];
 	following: mongoose.Types.ObjectId[];
 	posts: mongoose.Types.ObjectId[];
@@ -28,6 +29,7 @@ const UserSchema = new Schema<IUser>(
 		bio: { type: String },
 		location: { type: String },
 		website: { type: String },
+		isVerified: { type: Boolean, default: false },
 		followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
 		following: [{ type: Schema.Types.ObjectId, ref: "User" }],
 		posts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
