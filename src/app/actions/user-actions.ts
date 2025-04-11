@@ -1,6 +1,6 @@
 "use server"
 
-import { updateUser, followUser, unfollowUser, getSuggestedUsers } from "@/lib/db"
+import { updateUser, followUser, unfollowUser, getSuggestedUsers, searchUsers } from "@/lib/db"
 import { createNotification } from "@/lib/db"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
@@ -79,5 +79,22 @@ export async function getSuggested() {
   } catch (error) {
     console.error("Get suggested users error:", error)
     return { error: "Failed to get suggested users" }
+  }
+}
+
+export async function searchPeople(query: string) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session || !session.user) {
+      return { error: "You must be logged in to search users" }
+    }
+
+    const users = await searchUsers(query, session.user.id)
+
+    return { success: true, users }
+  } catch (error) {
+    console.error("Search users error:", error)
+    return { error: "Failed to search users" }
   }
 }
