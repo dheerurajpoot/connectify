@@ -100,16 +100,16 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 			<div className='flex h-16 items-center border-b px-6'>
 				<Link
 					href='/'
-					className='flex items-center gap-2 font-semibold'>
+					className='flex items-center gap-1 font-semibold'>
 					<div className='relative h-8 w-8'>
 						<Image
-							src='/placeholder.svg?height=32&width=32'
-							alt='Connectify Logo'
+							src='/orbtao.svg?height=32&width=32'
+							alt='Orbtao Logo'
 							fill
 							className='rounded'
 						/>
 					</div>
-					<span className='text-xl'>Connectify</span>
+					<span className='text-2xl font-bold'>Orbtao</span>
 				</Link>
 			</div>
 			<div className='flex-1 overflow-auto py-4'>

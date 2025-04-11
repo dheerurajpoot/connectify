@@ -12,11 +12,11 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
 	title: {
-		default: "Connectify | Connect with friends and the world",
-		template: "%s | Connectify",
+		default: "Orbtao | Connect with friends and the world",
+		template: "%s | Orbtao",
 	},
 	description:
-		"Connect with friends and the world around you on Connectify. Share photos, videos, thoughts and more.",
+		"Connect with friends and the world around you on Orbtao. Share photos, videos, thoughts and more.",
 	keywords: [
 		"social media",
 		"social network",
@@ -26,24 +26,24 @@ export const metadata: Metadata = {
 		"videos",
 		"stories",
 	],
-	authors: [{ name: "Connectify" }],
-	creator: "Connectify Team",
-	publisher: "Connectify Inc.",
+	authors: [{ name: "Orbtao" }],
+	creator: "Orbtao Team",
+	publisher: "Orbtao Inc.",
 	openGraph: {
 		type: "website",
 		locale: "en_US",
-		url: "https://connectify.app",
-		title: "Connectify | Connect with friends and the world",
+		url: "https://www.orbtao.com",
+		title: "Orbtao | Connect with friends and the world",
 		description:
-			"Connect with friends and the world around you on Connectify. Share photos, videos, thoughts and more.",
-		siteName: "Connectify",
+			"Connect with friends and the world around you on Orbtao. Share photos, videos, thoughts and more.",
+		siteName: "Orbtao",
 	},
 	twitter: {
 		card: "summary_large_image",
-		title: "Connectify | Connect with friends and the world",
+		title: "Orbtao | Connect with friends and the world",
 		description:
-			"Connect with friends and the world around you on Connectify. Share photos, videos, thoughts and more.",
-		creator: "@connectify",
+			"Connect with friends and the world around you on Orbtao. Share photos, videos, thoughts and more.",
+		creator: "@Orbtao",
 	},
 	generator: "v0.dev",
 };

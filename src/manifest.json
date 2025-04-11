@@ -1,6 +1,6 @@
 {
-	"name": "Connectify",
-	"short_name": "Connectify",
+	"name": "Orbtao",
+	"short_name": "Orbtao",
 	"description": "Connect with friends and the world around you",
 	"start_url": "/",
 	"display": "standalone",

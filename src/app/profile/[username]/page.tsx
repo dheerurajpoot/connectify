@@ -30,10 +30,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 	return {
 		title: `${user.name} (@${user.username})`,
-		description: user.bio || "Connect with me on Connectify",
+		description: user.bio || "Connect with me on Orbtao",
 		openGraph: {
 			title: `${user.name} (@${user.username})`,
-			description: user.bio || "Connect with me on Connectify",
+			description: user.bio || "Connect with me on Orbtao",
 		},
 	};
 }

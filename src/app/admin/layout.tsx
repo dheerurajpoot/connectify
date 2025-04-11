@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 
 export const metadata: Metadata = {
-	title: "Admin Dashboard | Connectify",
+	title: "Admin Dashboard | Orbtao",
 	description: "Manage your social media platform",
 };
 

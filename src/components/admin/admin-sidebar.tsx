@@ -72,7 +72,7 @@ export function AdminSidebar({ className }: AdminSidebarProps) {
 					href='/admin'
 					className='flex items-center gap-2 font-semibold'>
 					<Shield className='h-6 w-6 text-primary' />
-					<span>Connectify Admin</span>
+					<span>Orbtao Admin</span>
 				</Link>
 			</div>
 			<div className='flex flex-col gap-2 p-4'>

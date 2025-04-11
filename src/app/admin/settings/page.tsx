@@ -55,7 +55,7 @@ export default function SettingsPage() {
 								</Label>
 								<Input
 									id='platform-name'
-									defaultValue='Connectify'
+									defaultValue='Orbtao'
 								/>
 							</div>
 							<div className='grid gap-2'>
@@ -64,7 +64,7 @@ export default function SettingsPage() {
 								</Label>
 								<Textarea
 									id='platform-description'
-									defaultValue='Connect with friends and the world around you on Connectify.'
+									defaultValue='Connect with friends and the world around you on Orbtao.'
 								/>
 							</div>
 							<div className='grid gap-2'>
@@ -74,7 +74,7 @@ export default function SettingsPage() {
 								<Input
 									id='support-email'
 									type='email'
-									defaultValue='support@connectify.app'
+									defaultValue='support@Orbtao.app'
 								/>
 							</div>
 						</CardContent>

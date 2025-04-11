@@ -6,7 +6,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Plus, X, ImagePlus } from "lucide-react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
 import {
 	getStories,
 	createNewStory,
@@ -142,10 +148,6 @@ export function Stories() {
 		}
 	};
 
-	if (status === "loading") {
-		return <div>Loading...</div>;
-	}
-
 	if (status === "unauthenticated") {
 		return null;
 	}
@@ -157,7 +159,7 @@ export function Stories() {
 					<Button
 						variant='ghost'
 						size='icon'
-						className='h-8 w-8 rounded-full bg-background shadow-md'
+						className='h-8 w-8 rounded-full bg-background shadow-md hidden'
 						onClick={() => scroll("left")}>
 						<ChevronLeft className='h-4 w-4' />
 					</Button>
@@ -171,10 +173,7 @@ export function Stories() {
 						<div className='relative rounded-full p-[2px]'>
 							<Avatar className='h-16 w-16 border-2 border-background'>
 								<AvatarImage
-									src={
-										session?.user?.image ||
-										"/placeholder.svg?height=48&width=48"
-									}
+									src={session?.user?.image || ""}
 									alt='Your story'
 								/>
 								<AvatarFallback>
@@ -182,6 +181,8 @@ export function Stories() {
 								</AvatarFallback>
 							</Avatar>
 							<Dialog>
+								<DialogTitle></DialogTitle>
+								<DialogDescription></DialogDescription>
 								<DialogTrigger asChild>
 									<div className='absolute bottom-0 right-0 rounded-full bg-primary p-1 text-primary-foreground cursor-pointer'>
 										<Plus className='h-3 w-3' />
