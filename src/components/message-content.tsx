@@ -107,19 +107,18 @@ export function MessageContent() {
 
 				socketRef.current.on("message", (message: any) => {
 					if (message.senderId === partnerId) {
-						setMessages((prev) => [
-							...prev,
-							{
-								...message,
-								senderId: partner,
-								receiverId: {
-									_id: session?.user?.id || "",
-									name: session?.user?.name || "",
-									username: session?.user?.username || "",
-									avatar: session?.user?.image,
-								},
-							},
-						]);
+							const newMsg: Message = {
+						...message,
+						senderId: partner!,
+						receiverId: {
+							_id: session?.user?.id || "",
+							name: session?.user?.name || "",
+							username: session?.user?.username || "",
+							avatar: session?.user?.image,
+						},
+					};
+					// Add new message to the end (chronological order)
+					setMessages((prev) => [...prev, newMsg]);
 						scrollToBottom();
 					}
 				});
@@ -194,8 +193,9 @@ export function MessageContent() {
 					variant: "destructive",
 				});
 			} else if (result?.success) {
+				// Messages come sorted from newest to oldest from the server
 				setMessages(
-					result.messages.map((msg: any) => ({
+					[...result.messages].reverse().map((msg: any) => ({
 						_id: msg._id.toString(),
 						senderId: {
 							_id: msg.senderId._id.toString(),
@@ -277,7 +277,7 @@ export function MessageContent() {
 			createdAt: socketMessage.createdAt,
 		};
 
-		// Optimistic update
+		// Optimistic update - add to end in chronological order
 		setMessages((prev) => [...prev, newMessage as Message]);
 		setMessageText("");
 
@@ -377,7 +377,7 @@ export function MessageContent() {
 			{/* Messages */}
 			<div
 				ref={messagesContainerRef}
-				className='flex-1 p-4 overflow-y-auto flex flex-col'>
+				className='flex-1 p-4 overflow-y-auto flex flex-col justify-start'>
 				{loading ? (
 					<div className='flex items-center justify-center h-full'>
 						<Loader2 className='w-6 h-6 animate-spin' />
@@ -389,7 +389,7 @@ export function MessageContent() {
 						</p>
 					</div>
 				) : (
-					<div className='space-y-4 flex flex-col'>
+					<div className='space-y-4 flex flex-col' ref={messagesEndRef}>
 						{messages.map((message) => (
 							<div
 								key={message._id}
