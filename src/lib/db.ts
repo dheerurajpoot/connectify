@@ -135,6 +135,32 @@ export async function getSuggestedUsers(userId: string, limit = 5) {
 		.select("name username avatar");
 }
 
+export async function searchUsers(query: string, currentUserId: string) {
+	await connectDB();
+
+	if (!query) return [];
+
+	const users = await User.find({
+		$and: [
+			{ _id: { $ne: new mongoose.Types.ObjectId(currentUserId) } },
+			{
+				$or: [
+					{ name: { $regex: query, $options: "i" } },
+					{ username: { $regex: query, $options: "i" } },
+				],
+			},
+		],
+	})
+		.select("name username avatar")
+		.lean()
+		.limit(10);
+
+	return users.map(user => ({
+		...user,
+		_id: user._id.toString()
+	}));
+}
+
 // Post operations
 export async function createPost(
 	postData: Omit<
@@ -167,7 +193,7 @@ export async function getPostById(id: string) {
 		});
 }
 
-export async function getFeedPosts(userId: string, page = 1, limit = 10) {
+export async function getFeedPosts(userId: string, page = 1, limit = 100) {
 	await connectDB();
 
 	const user = await User.findById(userId);

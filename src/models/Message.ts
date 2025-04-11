@@ -21,7 +21,44 @@ const MessageSchema = new Schema<IMessage>(
 		content: { type: String, required: true },
 		read: { type: Boolean, default: false },
 	},
-	{ timestamps: true }
+	{
+		timestamps: true,
+		toJSON: {
+			transform: function (doc, ret) {
+				// Handle ObjectIds
+				if (ret._id) {
+					ret._id = ret._id.toString();
+				}
+
+				// Handle populated fields
+				if (ret.senderId) {
+					if (typeof ret.senderId === 'object' && ret.senderId._id) {
+						ret.senderId = {
+							...ret.senderId,
+							_id: ret.senderId._id.toString()
+						};
+					} else if (ret.senderId.toString) {
+						ret.senderId = ret.senderId.toString();
+					}
+				}
+
+				if (ret.receiverId) {
+					if (typeof ret.receiverId === 'object' && ret.receiverId._id) {
+						ret.receiverId = {
+							...ret.receiverId,
+							_id: ret.receiverId._id.toString()
+						};
+					} else if (ret.receiverId.toString) {
+						ret.receiverId = ret.receiverId.toString();
+					}
+				}
+
+				// Remove version key
+				delete ret.__v;
+				return ret;
+			},
+		},
+	}
 );
 
 // Create and export the model

@@ -12,6 +12,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
 import { BadgeCheck } from "lucide-react";
+import { FollowButton } from "@/components/follow-button";
+import { MessageButton } from "@/components/message-button";
 
 type Props = {
 	params: { username: string };
@@ -84,22 +86,16 @@ export default async function ProfilePage({ params }: Props) {
 								<a href='/profile/edit'>Edit Profile</a>
 							</Button>
 						) : (
-							<form
-								action={async () => {
-									"use server";
-									await handleFollow(
-										user.username,
-										isFollowing
-									);
-								}}>
-								<Button
-									type='submit'
-									variant={
-										isFollowing ? "outline" : "default"
-									}>
-									{isFollowing ? "Following" : "Follow"}
-								</Button>
-							</form>
+							<div className='flex gap-2'>
+								<FollowButton
+									username={user.username}
+									initialIsFollowing={isFollowing}
+								/>
+								<MessageButton
+									userId={user._id.toString()}
+									username={user.username}
+								/>
+							</div>
 						)}
 					</div>
 				</div>

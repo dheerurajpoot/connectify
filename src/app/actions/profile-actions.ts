@@ -36,16 +36,16 @@ export async function getProfileData(username: string) {
 	}
 }
 
-export async function handleFollow(username: string, isFollowing: boolean) {
+export async function handleFollow(username: string, isFollowing: boolean, formData: FormData) {
 	try {
 		const session = await getServerSession(authOptions);
 		if (!session?.user?.id) {
-			return { error: "Not authenticated" };
+			throw new Error("Not authenticated");
 		}
 
 		const user = await getUserByUsername(username);
 		if (!user) {
-			return { error: "User not found" };
+			throw new Error("User not found");
 		}
 
 		if (isFollowing) {
@@ -54,10 +54,11 @@ export async function handleFollow(username: string, isFollowing: boolean) {
 			await followUser(session.user.id, user._id.toString());
 		}
 
-		return { success: true };
+		// For server actions, we don't need to return anything
+		// The page will automatically revalidate
 	} catch (error) {
 		console.error("Error in follow action:", error);
-		return { error: "Failed to update follow status" };
+		throw new Error("Failed to update follow status");
 	}
 }
 

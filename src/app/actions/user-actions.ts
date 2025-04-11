@@ -36,34 +36,34 @@ export async function updateUserProfile(formData: FormData) {
   }
 }
 
-export async function followUnfollowUser(targetUserId: string, isFollowing: boolean) {
-  try {
-    const session = await getServerSession(authOptions)
+// export async function followUnfollowUser(targetUserId: string, isFollowing: boolean) {
+//   try {
+//     const session = await getServerSession(authOptions)
 
-    if (!session || !session.user) {
-      return { error: "You must be logged in to follow users" }
-    }
+//     if (!session || !session.user) {
+//       return { error: "You must be logged in to follow users" }
+//     }
 
-    if (isFollowing) {
-      await unfollowUser(session.user.id, targetUserId)
-    } else {
-      await followUser(session.user.id, targetUserId)
+//     if (isFollowing) {
+//       await unfollowUser(session.user.id, targetUserId)
+//     } else {
+//       await followUser(session.user.id, targetUserId)
 
-      // Create notification for the target user
-      await createNotification({
-        userId: targetUserId,
-        type: "follow",
-        actorId: session.user.id,
-      })
-    }
+//       // Create notification for the target user
+//       await createNotification({
+//         userId: targetUserId,
+//         type: "follow",
+//         actorId: session.user.id,
+//       })
+//     }
 
-    revalidatePath("/")
-    return { success: true }
-  } catch (error) {
-    console.error("Follow/unfollow user error:", error)
-    return { error: "Failed to follow/unfollow user" }
-  }
-}
+//     revalidatePath("/")
+//     return { success: true }
+//   } catch (error) {
+//     console.error("Follow/unfollow user error:", error)
+//     return { error: "Failed to follow/unfollow user" }
+//   }
+// }
 
 export async function getSuggested() {
   try {

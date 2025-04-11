@@ -7,11 +7,11 @@ import { Search } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { getConversations } from "@/app/actions/message-actions";
+import { getConversations, searchUsersToMessage } from "@/app/actions/message-actions";
 import { useSession } from "next-auth/react";
 import { useToast } from "../hooks/use-toast";
 interface Conversation {
-	partner: {
+	user: {
 		_id: string;
 		name: string;
 		username: string;
@@ -22,12 +22,22 @@ interface Conversation {
 		createdAt: string;
 		read: boolean;
 	};
+	unreadCount: number;
+}
+
+interface SearchUser {
+	_id: string;
+	name: string;
+	username: string;
+	avatar?: string;
 }
 
 export function MessageList() {
 	const [conversations, setConversations] = useState<Conversation[]>([]);
+	const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [isSearching, setIsSearching] = useState(false);
 	const searchParams = useSearchParams();
 	const router = useRouter();
 	const selectedConversation = searchParams.get("id");
@@ -66,55 +76,47 @@ export function MessageList() {
 		}
 	};
 
+	useEffect(() => {
+		const searchUsers = async () => {
+			if (searchQuery.length < 1) {
+				setSearchResults([]);
+				return;
+			}
+
+			setIsSearching(true);
+			try {
+				const result = await searchUsersToMessage(searchQuery);
+				if (result.error) {
+					toast({
+						title: "Error",
+						description: result.error,
+						variant: "destructive",
+					});
+				} else if (result.success) {
+					setSearchResults(result.users);
+				}
+			} catch (error) {
+				console.error("Search error:", error);
+			} finally {
+				setIsSearching(false);
+			}
+		};
+
+		const debounceTimeout = setTimeout(searchUsers, 300);
+		return () => clearTimeout(debounceTimeout);
+	}, [searchQuery]);
+
 	const filteredConversations = conversations.filter(
 		(conversation) =>
-			conversation.partner.name
+			conversation.user.name
 				.toLowerCase()
 				.includes(searchQuery.toLowerCase()) ||
-			conversation.partner.username
+			conversation.user.username
 				.toLowerCase()
 				.includes(searchQuery.toLowerCase())
 	);
 
-	// Mock data for development
-	const mockConversations = [
-		{
-			id: "1",
-			name: "Emma Wilson",
-			username: "emma",
-			avatar: "/placeholder.svg?height=40&width=40",
-			lastMessage: "That sounds great! Send me the details",
-			time: "2m",
-			unread: true,
-		},
-		{
-			id: "2",
-			name: "Alex Thompson",
-			username: "alex",
-			avatar: "/placeholder.svg?height=40&width=40",
-			lastMessage: "Are we still meeting tomorrow?",
-			time: "1h",
-			unread: false,
-		},
-		{
-			id: "3",
-			name: "Michael Chen",
-			username: "michael",
-			avatar: "/placeholder.svg?height=40&width=40",
-			lastMessage: "I just sent you the files you requested",
-			time: "3h",
-			unread: false,
-		},
-		{
-			id: "4",
-			name: "Sophie Taylor",
-			username: "sophie",
-			avatar: "/placeholder.svg?height=40&width=40",
-			lastMessage: "Thanks for your help with the project!",
-			time: "1d",
-			unread: false,
-		},
-	];
+
 
 	return (
 		<div className='flex h-full flex-col'>
@@ -134,36 +136,65 @@ export function MessageList() {
 					<div className='flex h-full items-center justify-center'>
 						<p>Loading conversations...</p>
 					</div>
+				) : searchQuery && searchResults.length > 0 ? (
+					// Show search results
+					searchResults.map((user) => (
+						<Link
+							key={user._id}
+							href={`/messages?id=${user._id}`}
+							className={cn(
+								"flex items-center gap-3 border-b p-4 hover:bg-accent",
+								selectedConversation === user._id &&
+									"bg-accent"
+							)}>
+							<Avatar>
+								<AvatarImage
+									src={user.avatar}
+									alt={user.name}
+								/>
+								<AvatarFallback>
+									{user.name.slice(0, 2)}
+								</AvatarFallback>
+							</Avatar>
+							<div className='flex-1'>
+								<p className='font-medium'>{user.name}</p>
+								<p className='text-sm text-muted-foreground'>
+									@{user.username}
+								</p>
+							</div>
+						</Link>
+					))
 				) : filteredConversations.length === 0 ? (
 					<div className='flex h-full items-center justify-center p-4'>
 						<p className='text-center text-sm text-muted-foreground'>
 							{searchQuery
-								? "No conversations match your search"
+								? isSearching
+									? "Searching..."
+									: "No users found"
 								: "No conversations yet"}
 						</p>
 					</div>
 				) : (
-					// Use mock data for now
-					mockConversations.map((conversation) => (
+filteredConversations.map((conversation) => (
 						<Link
-							key={conversation.id}
-							href={`/messages?id=${conversation.id}`}
+							key={conversation.user._id}
+							href={`/messages?id=${conversation.user._id}`}
 							className={cn(
 								"flex items-center gap-3 border-b p-4 hover:bg-accent",
-								selectedConversation === conversation.id &&
+								selectedConversation === conversation.user._id &&
 									"bg-accent"
 							)}>
 							<div className='relative'>
 								<Avatar>
 									<AvatarImage
-										src={conversation.avatar}
-										alt={conversation.name}
+										src={conversation.user.avatar}
+										alt={conversation.user.name}
 									/>
 									<AvatarFallback>
-										{conversation.name.slice(0, 2)}
+										{conversation.user.name.slice(0, 2)}
 									</AvatarFallback>
 								</Avatar>
-								{conversation.unread && (
+								{conversation.unreadCount > 0 && (
 									<div className='absolute -right-1 -top-1 h-3 w-3 rounded-full bg-primary' />
 								)}
 							</div>
@@ -172,21 +203,24 @@ export function MessageList() {
 									<p
 										className={cn(
 											"font-medium",
-											conversation.unread &&
+											conversation.unreadCount > 0 &&
 												"font-semibold"
 										)}>
-										{conversation.name}
+										{conversation.user.name}
 									</p>
 									<p className='text-xs text-muted-foreground'>
-										{conversation.time}
+										{new Date(conversation.lastMessage.createdAt).toLocaleTimeString([], {
+											hour: '2-digit',
+											minute: '2-digit'
+										})}
 									</p>
 								</div>
 								<p
 									className={cn(
 										"truncate text-sm text-muted-foreground",
-										conversation.unread && "text-foreground"
+										conversation.unreadCount > 0 && "text-foreground"
 									)}>
-									{conversation.lastMessage}
+									{conversation.lastMessage.content}
 								</p>
 							</div>
 						</Link>
