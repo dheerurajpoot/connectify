@@ -422,13 +422,23 @@ export async function createNotification(
 ) {
 	await connectDB();
 
-	const newNotification = new Notification({
+	// Convert string IDs to ObjectIds
+	const data = {
 		...notificationData,
+		userId: new Types.ObjectId(notificationData.userId.toString()),
+		actorId: new Types.ObjectId(notificationData.actorId.toString()),
+		postId: notificationData.postId ? new Types.ObjectId(notificationData.postId.toString()) : undefined,
+		commentId: notificationData.commentId ? new Types.ObjectId(notificationData.commentId.toString()) : undefined,
 		read: false,
-	});
+	};
 
+	const newNotification = new Notification(data);
 	await newNotification.save();
-	return newNotification;
+
+	// Populate the actor details before returning
+	return newNotification
+		.populate("actorId", "name username avatar")
+		.then(doc => doc.toObject());
 }
 
 export async function getUserNotifications(
@@ -440,13 +450,15 @@ export async function getUserNotifications(
 
 	const skip = (page - 1) * limit;
 
-	return Notification.find({ userId })
+	return Notification.find({ userId: new Types.ObjectId(userId) })
 		.sort({ createdAt: -1 })
 		.skip(skip)
 		.limit(limit)
 		.populate("actorId", "name username avatar")
 		.populate("postId")
-		.populate("commentId");
+		.populate("commentId")
+		.lean()
+		.exec();
 }
 
 export async function markNotificationAsRead(notificationId: string) {

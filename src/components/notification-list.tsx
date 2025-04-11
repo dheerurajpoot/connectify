@@ -15,16 +15,16 @@ interface Notification {
 	_id: string;
 	userId: string;
 	type: "like" | "comment" | "follow" | "mention";
-	actorId: string;
-	postId?: string;
-	commentId?: string;
-	read: boolean;
-	createdAt: string;
-	actor?: {
+	actorId: {
+		_id: string;
 		name: string;
 		username: string;
 		avatar: string;
 	};
+	postId?: string;
+	commentId?: string;
+	read: boolean;
+	createdAt: string;
 }
 
 interface NotificationListProps {
@@ -33,7 +33,10 @@ interface NotificationListProps {
 
 export function NotificationList({ type }: NotificationListProps) {
 	const [notifications, setNotifications] = useState<Notification[]>([]);
+	const [page, setPage] = useState(1);
+	const [hasMore, setHasMore] = useState(true);
 	const [loading, setLoading] = useState(true);
+	const [markingAllAsRead, setMarkingAllAsRead] = useState(false);
 	const { toast } = useToast();
 	const { data: session } = useSession();
 
@@ -43,11 +46,13 @@ export function NotificationList({ type }: NotificationListProps) {
 		}
 	}, [session, type]);
 
-	const fetchNotifications = async () => {
-		setLoading(true);
+	const fetchNotifications = async (pageNum = page) => {
+		if (pageNum === 1) {
+			setLoading(true);
+		}
 
 		try {
-			const result = await getNotifications();
+			const result = await getNotifications(pageNum);
 
 			if (result?.error) {
 				toast({
@@ -56,9 +61,45 @@ export function NotificationList({ type }: NotificationListProps) {
 					variant: "destructive",
 				});
 			} else if (result?.success) {
-				setNotifications(result.notifications);
+				// Transform the data to match our interface
+				const transformedNotifications = result.notifications.map(
+					(n: any) => {
+						const notification: Notification = {
+							_id: n._id.toString(),
+							userId: n.userId.toString(),
+							type: n.type,
+							actorId: {
+								_id: n.actorId._id.toString(),
+								name: n.actorId.name,
+								username: n.actorId.username,
+								avatar: n.actorId.avatar,
+							},
+							postId: n.postId ? n.postId.toString() : undefined,
+							commentId: n.commentId
+								? n.commentId.toString()
+								: undefined,
+							read: n.read,
+							createdAt: n.createdAt,
+						};
+
+						return notification;
+					}
+				);
+
+				if (pageNum === 1) {
+					setNotifications(transformedNotifications);
+				} else {
+					setNotifications((prev) => [
+						...prev,
+						...transformedNotifications,
+					]);
+				}
+
+				// If we got less than 20 items, there are no more pages
+				setHasMore(transformedNotifications.length === 20);
 			}
 		} catch (error) {
+			console.error("Fetch notifications error:", error);
 			toast({
 				title: "Error",
 				description: "Failed to load notifications",
@@ -91,6 +132,7 @@ export function NotificationList({ type }: NotificationListProps) {
 	};
 
 	const handleMarkAllAsRead = async () => {
+		setMarkingAllAsRead(true);
 		try {
 			await readAllNotifications();
 
@@ -109,6 +151,8 @@ export function NotificationList({ type }: NotificationListProps) {
 				description: "Failed to mark all notifications as read",
 				variant: "destructive",
 			});
+		} finally {
+			setMarkingAllAsRead(false);
 		}
 	};
 
@@ -125,74 +169,36 @@ export function NotificationList({ type }: NotificationListProps) {
 					return true;
 			  });
 
-	// Mock data for development
-	const mockNotifications = [
-		{
-			id: "1",
-			type: "like",
-			user: {
-				name: "Emma Wilson",
-				username: "emma",
-				avatar: "/placeholder.svg?height=40&width=40",
-			},
-			content: "liked your post",
-			post: "Just finished my latest photography project! 📸",
-			time: "2m",
-			read: false,
-		},
-		{
-			id: "2",
-			type: "follow",
-			user: {
-				name: "Alex Thompson",
-				username: "alex",
-				avatar: "/placeholder.svg?height=40&width=40",
-			},
-			content: "started following you",
-			time: "1h",
-			read: false,
-		},
-		{
-			id: "3",
-			type: "comment",
-			user: {
-				name: "Michael Chen",
-				username: "michael",
-				avatar: "/placeholder.svg?height=40&width=40",
-			},
-			content: "commented on your post",
-			comment: "This looks amazing! Where was this taken?",
-			post: "The view from my morning hike today.",
-			time: "3h",
-			read: true,
-		},
-		{
-			id: "4",
-			type: "mention",
-			user: {
-				name: "Sophie Taylor",
-				username: "sophie",
-				avatar: "/placeholder.svg?height=40&width=40",
-			},
-			content: "mentioned you in a comment",
-			comment: "I think @johndoe would love this place!",
-			post: "Check out this new cafe I discovered!",
-			time: "1d",
-			read: true,
-		},
-	];
+	const getRelativeTime = (date: Date) => {
+		const now = new Date();
+		const diffInSeconds = Math.floor(
+			(now.getTime() - date.getTime()) / 1000
+		);
 
-	// Filter mock notifications based on type
-	const filteredMockNotifications =
-		type === "all"
-			? mockNotifications
-			: mockNotifications.filter((notification) =>
-					type === "mentions"
-						? notification.type === "mention"
-						: type === "likes"
-						? notification.type === "like"
-						: notification.type === "comment"
-			  );
+		if (diffInSeconds < 60) return "just now";
+		if (diffInSeconds < 3600)
+			return `${Math.floor(diffInSeconds / 60)}m ago`;
+		if (diffInSeconds < 86400)
+			return `${Math.floor(diffInSeconds / 3600)}h ago`;
+		if (diffInSeconds < 604800)
+			return `${Math.floor(diffInSeconds / 86400)}d ago`;
+		return date.toLocaleDateString();
+	};
+
+	const getNotificationContent = (notification: Notification) => {
+		switch (notification.type) {
+			case "like":
+				return "liked your post";
+			case "comment":
+				return "commented on your post";
+			case "follow":
+				return "started following you";
+			case "mention":
+				return "mentioned you in a comment";
+			default:
+				return "";
+		}
+	};
 
 	return (
 		<div className='space-y-4'>
@@ -200,7 +206,7 @@ export function NotificationList({ type }: NotificationListProps) {
 				<div className='flex items-center justify-center p-8'>
 					<p>Loading notifications...</p>
 				</div>
-			) : filteredMockNotifications.length === 0 ? (
+			) : filteredNotifications.length === 0 ? (
 				<div className='flex items-center justify-center p-8'>
 					<p className='text-center text-sm text-muted-foreground'>
 						No notifications found
@@ -208,52 +214,58 @@ export function NotificationList({ type }: NotificationListProps) {
 				</div>
 			) : (
 				<>
-					{filteredMockNotifications.map((notification) => (
+					{filteredNotifications.map((notification) => (
 						<div
-							key={notification.id}
+							key={notification._id}
 							className='flex items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-accent'
-							onClick={() => handleMarkAsRead(notification.id)}>
+							onClick={() => handleMarkAsRead(notification._id)}>
 							{!notification.read && (
 								<div className='mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-primary' />
 							)}
 							<Link
-								href={`/profile/${notification.user.username}`}>
+								href={`/profile/${notification.actorId.username}`}>
 								<Avatar>
 									<AvatarImage
-										src={notification.user.avatar}
-										alt={notification.user.name}
+										src={
+											notification.actorId.avatar ||
+											"/placeholder.svg"
+										}
+										alt={notification.actorId.name}
 									/>
 									<AvatarFallback>
-										{notification.user.name.slice(0, 2)}
+										{notification.actorId.name.slice(0, 2)}
 									</AvatarFallback>
 								</Avatar>
 							</Link>
 							<div className='flex-1'>
 								<div className='flex items-center gap-1'>
 									<Link
-										href={`/profile/${notification.user.username}`}
+										href={`/profile/${notification.actorId.username}`}
 										className='font-medium hover:underline'>
-										{notification.user.name}
+										{notification.actorId.name}
 									</Link>
 									<span className='text-sm'>
-										{notification.content}
+										{getNotificationContent(notification)}
 									</span>
 									<span className='text-xs text-muted-foreground'>
-										{notification.time}
+										{getRelativeTime(
+											new Date(notification.createdAt)
+										)}
 									</span>
 								</div>
-								{notification.post && (
+								{notification.postId && (
 									<Link
-										href={`/post/${notification.id}`}
+										href={`/post/${notification.postId}`}
 										className='mt-1 text-sm text-muted-foreground hover:underline'>
-										{notification.post}
+										View post
 									</Link>
 								)}
-								{notification.comment && (
-									<p className='mt-1 text-sm'>
-										"{notification.comment}"
-									</p>
-								)}
+								{notification.commentId &&
+									notification.type === "comment" && (
+										<p className='mt-1 text-sm'>
+											View comment
+										</p>
+									)}
 							</div>
 							{notification.type === "follow" && (
 								<Button
@@ -266,14 +278,29 @@ export function NotificationList({ type }: NotificationListProps) {
 						</div>
 					))}
 
-					{filteredMockNotifications.some(
+					{filteredNotifications.some(
 						(notification) => !notification.read
 					) && (
 						<Button
 							variant='outline'
 							className='w-full'
-							onClick={handleMarkAllAsRead}>
-							Mark all as read
+							onClick={handleMarkAllAsRead}
+							disabled={markingAllAsRead}>
+							{markingAllAsRead
+								? "Marking as read..."
+								: "Mark all as read"}
+						</Button>
+					)}
+
+					{!loading && hasMore && (
+						<Button
+							variant='outline'
+							className='w-full'
+							onClick={() => {
+								setPage((prev) => prev + 1);
+								fetchNotifications(page + 1);
+							}}>
+							Load more
 						</Button>
 					)}
 				</>
