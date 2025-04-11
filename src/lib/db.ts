@@ -492,6 +492,12 @@ export async function markAllNotificationsAsRead(userId: string) {
 	return { success: true };
 }
 
+export async function deletePost(postId: string) {
+	await connectDB();
+	await Post.findByIdAndDelete(postId);
+	return { success: true };
+}
+
 // Authentication
 export async function verifyCredentials(email: string, password: string) {
 	await connectDB();

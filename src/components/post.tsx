@@ -28,7 +28,13 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { format } from "timeago.js";
-import { likeUnlikePost, addPostComment } from "@/app/actions/post-actions";
+import {
+	likeUnlikePost,
+	addPostComment,
+	deleteUserPost,
+} from "@/app/actions/post-actions";
+import { useSession } from "next-auth/react";
+import { toast } from "@/components/ui/use-toast";
 import { PostPreviewDialog } from "./post-preview-dialog";
 
 interface PostProps {
@@ -50,9 +56,11 @@ interface PostProps {
 }
 
 export function Post({ post }: PostProps) {
+	const { data: session } = useSession();
 	const [liked, setLiked] = useState(
 		post.likes?.includes(post.userId._id) || false
 	);
+	const isOwner = session?.user?.id === post.userId._id;
 	const [bookmarked, setBookmarked] = useState(false);
 	const [comment, setComment] = useState("");
 	const [showComments, setShowComments] = useState(false);
@@ -93,6 +101,29 @@ export function Post({ post }: PostProps) {
 
 	const handleShareSuccess = () => {
 		setSharesCount((prev) => prev + 1);
+	};
+
+	const handleDeletePost = async () => {
+		try {
+			const result = await deleteUserPost(post._id);
+			console.log(result);
+			if (result.success) {
+				toast({
+					title: "Post deleted",
+					description: "Your post has been deleted successfully",
+				});
+				// Refresh the page to update the feed
+				window.location.reload();
+			} else {
+				throw new Error(result.error);
+			}
+		} catch (error) {
+			toast({
+				title: "Error",
+				description: "Failed to delete post",
+				variant: "destructive",
+			});
+		}
 	};
 
 	const isVerified = post.userId.username === "dheerurajpoot";
@@ -141,12 +172,22 @@ export function Post({ post }: PostProps) {
 						<DropdownMenuContent
 							align='end'
 							className='w-48 rounded-xl p-1'>
-							<DropdownMenuItem className='cursor-pointer rounded-lg'>
-								Report Post
-							</DropdownMenuItem>
-							<DropdownMenuItem className='cursor-pointer rounded-lg'>
-								Unfollow @{post.userId.username}
-							</DropdownMenuItem>
+							{isOwner ? (
+								<DropdownMenuItem
+									className='cursor-pointer rounded-lg text-red-500 focus:text-red-500'
+									onClick={handleDeletePost}>
+									Delete Post
+								</DropdownMenuItem>
+							) : (
+								<>
+									<DropdownMenuItem className='cursor-pointer rounded-lg'>
+										Report Post
+									</DropdownMenuItem>
+									<DropdownMenuItem className='cursor-pointer rounded-lg'>
+										Unfollow @{post.userId.username}
+									</DropdownMenuItem>
+								</>
+							)}
 							<DropdownMenuItem className='cursor-pointer rounded-lg'>
 								Copy Link
 							</DropdownMenuItem>

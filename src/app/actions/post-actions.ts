@@ -8,6 +8,7 @@ import {
 	getFeedPosts,
 	getExplorePosts,
 	getPostById,
+	deletePost,
 } from "@/lib/db";
 import { createNotification } from "@/lib/db";
 import { getServerSession } from "next-auth";
@@ -285,6 +286,33 @@ export async function getExplore(category?: string, page = 1) {
 	} catch (error) {
 		console.error("Get explore error:", error);
 		return { error: "Failed to get explore posts" };
+	}
+}
+
+export async function deleteUserPost(postId: string) {
+	try {
+		const session = await getServerSession(authOptions);
+
+		if (!session || !session.user) {
+			return { error: "You must be logged in to delete a post" };
+		}
+
+		const post = await getPostById(postId);
+		if (!post) {
+			return { error: "Post not found" };
+		}
+
+		// Check if the user is the owner of the post
+		if (post.userId._id.toString() !== session.user.id) {
+			return { error: "You can only delete your own posts" };
+		}
+
+		await deletePost(postId);
+		revalidatePath("/");
+		return { success: true };
+	} catch (error) {
+		console.error("Delete post error:", error);
+		return { error: "Failed to delete post" };
 	}
 }
 
