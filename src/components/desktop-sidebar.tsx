@@ -26,7 +26,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/hooks/use-toast";
 
 interface DesktopSidebarProps {
 	className?: string;
@@ -36,7 +35,6 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 	const pathname = usePathname();
 	const { data: session } = useSession();
 	const router = useRouter();
-	const { toast } = useToast();
 
 	const navItems = [
 		{
@@ -76,18 +74,10 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 	const handleLogout = async () => {
 		try {
 			await signOut({ redirect: false });
-			toast({
-				title: "Success",
-				description: "Logged out successfully",
-			});
 			router.push("/auth/login");
 			router.refresh();
 		} catch (error) {
-			toast({
-				title: "Error",
-				description: "Failed to log out",
-				variant: "destructive",
-			});
+			console.log("Sign out error", error);
 		}
 	};
 
@@ -134,10 +124,7 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 				<div className='flex items-center gap-3'>
 					<Avatar>
 						<AvatarImage
-							src={
-								session?.user?.image ||
-								"/placeholder.svg?height=40&width=40"
-							}
+							src={session?.user?.image || ""}
 							alt='User'
 						/>
 						<AvatarFallback>

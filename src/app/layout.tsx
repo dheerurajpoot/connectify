@@ -85,6 +85,7 @@ export default function RootLayout({
 						defaultTheme='system'
 						enableSystem
 						disableTransitionOnChange>
+						<MobileHeader />
 						<div className='flex h-full'>
 							<DesktopSidebar className='hidden md:flex' />
 							<main className='flex-1 pb-16 md:pb-0 md:pl-64'>
@@ -100,3 +101,4 @@ export default function RootLayout({
 }
 
 import "./globals.css";
+import { MobileHeader } from "@/components/mobile-header";

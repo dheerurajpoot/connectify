@@ -29,14 +29,14 @@ export const metadata: Metadata = {
 
 export default async function PostPage({ params }: { params: { id: string } }) {
 	const { id } = await params;
-	const { post, error } = await getPost(id);
+	const { post } = await getPost(id);
 
 	if (!post) {
 		notFound();
 	}
 
 	return (
-		<div className='container mx-auto max-w-6xl px-4 py-6 md:py-8'>
+		<div className='container mx-auto max-w-6xl mt-10 md:mt-0 px-4 py-6 md:py-8'>
 			<Card className='overflow-hidden border-none shadow-md flex flex-col md:flex-row'>
 				{/* Left side - Image */}
 				<div className='relative aspect-square w-full bg-black md:h-full md:w-[55%]'>

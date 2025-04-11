@@ -55,15 +55,12 @@ export default async function ProfilePage({ params }: Props) {
 	const isVerified = username === "dheerurajpoot";
 
 	return (
-		<div className='container px-4 py-6'>
+		<div className='container px-4 mt-12 md:mt-0 py-6'>
 			<div className='mb-6 space-y-4 flex flex-col justify-center mx-auto md:w-2/3'>
 				<div className='flex flex-col items-center gap-4 sm:flex-row'>
 					<Avatar className='h-24 w-24 border-2 border-background'>
 						<AvatarImage
-							src={
-								user.avatar ||
-								`/placeholder.svg?height=96&width=96`
-							}
+							src={user.avatar || ""}
 							alt={user.username}
 						/>
 						<AvatarFallback>
@@ -71,15 +68,17 @@ export default async function ProfilePage({ params }: Props) {
 						</AvatarFallback>
 					</Avatar>
 					<div className='text-center sm:text-left'>
-						<h1 className='text-2xl font-bold'>{user.name}</h1>
-						{isVerified && (
-							<BadgeCheck className='h-5 w-5 text-blue-500' />
-						)}
+						<h1 className='text-2xl font-bold flex items-center gap-2'>
+							{user.name}
+							{isVerified && (
+								<BadgeCheck className='h-5 w-5 text-blue-500' />
+							)}
+						</h1>
 						<p className='text-muted-foreground'>
 							@{user.username}
 						</p>
 					</div>
-					<div className='ml-auto'>
+					<div className='mx-auto'>
 						{isOwnProfile ? (
 							<Button variant='outline' asChild>
 								<a href='/profile/edit'>Edit Profile</a>
@@ -120,7 +119,7 @@ export default async function ProfilePage({ params }: Props) {
 				</div>
 				<div className='flex justify-around text-center'>
 					<div>
-						<p className='font-bold'>0</p>
+						<p className='font-bold'>{posts?.length || 0}</p>
 						<p className='text-sm text-muted-foreground'>Posts</p>
 					</div>
 					<div>

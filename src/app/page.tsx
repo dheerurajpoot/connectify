@@ -7,8 +7,8 @@ import { TrendingTopics } from "@/components/trending-topics";
 
 export default function HomePage() {
 	return (
-		<div className='container grid grid-cols-1 gap-4 px-4 py-6 md:grid-cols-4 lg:gap-6'>
-			<div className='md:col-span-3'>
+		<div className='container grid gap-4 px-4 py-6 md:pl-16 md:grid-cols-8 lg:gap-18'>
+			<div className='mt-10 md:mt-0 md:col-span-4'>
 				<h1 className='sr-only'>Orbtao Home Feed</h1>
 				<Stories />
 				<Suspense fallback={<FeedSkeleton />}>
@@ -16,7 +16,7 @@ export default function HomePage() {
 				</Suspense>
 			</div>
 
-			<div className='hidden space-y-4 md:block'>
+			<div className='hidden space-y-4 md:col-span-3 md:block'>
 				<SuggestedUsers />
 				<TrendingTopics />
 			</div>

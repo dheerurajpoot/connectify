@@ -28,12 +28,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { format } from "timeago.js";
-import {
-	likeUnlikePost,
-	addPostComment,
-	sharePost,
-} from "@/app/actions/post-actions";
-import { toast } from "@/components/ui/use-toast";
+import { likeUnlikePost, addPostComment } from "@/app/actions/post-actions";
 import { PostPreviewDialog } from "./post-preview-dialog";
 
 interface PostProps {
