@@ -155,9 +155,9 @@ export async function searchUsers(query: string, currentUserId: string) {
 		.lean()
 		.limit(10);
 
-	return users.map(user => ({
+	return users.map((user) => ({
 		...user,
-		_id: user._id.toString()
+		_id: user._id.toString(),
 	}));
 }
 
@@ -275,31 +275,6 @@ export async function addComment(
 	await post.save();
 
 	return newComment;
-}
-
-export async function getExplorePosts(
-	userId: string,
-	category?: string,
-	page = 1,
-	limit = 20
-) {
-	await connectDB();
-
-	const user = await User.findById(userId);
-	if (!user) throw new Error("User not found");
-
-	const skip = (page - 1) * limit;
-
-	// Get posts from users the current user is not following
-	const query = {
-		userId: { $nin: [...user.following, userId] },
-	};
-
-	return Post.find(query)
-		.sort({ createdAt: -1 })
-		.skip(skip)
-		.limit(limit)
-		.populate("userId", "name username avatar");
 }
 
 // Story operations

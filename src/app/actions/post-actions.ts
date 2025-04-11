@@ -6,7 +6,6 @@ import {
 	unlikePost,
 	addComment,
 	getFeedPosts,
-	getExplorePosts,
 	getPostById,
 	deletePost,
 } from "@/lib/db";
@@ -238,54 +237,37 @@ export async function getPost(id: string) {
 
 		// Convert MongoDB document to plain object
 		const plainPost = {
-			...post.toObject(),
-			_id: (post as any)._id.toString(),
-			userId: {
-				...(post as any).userId.toObject(),
-				_id: (post as any).userId._id.toString(),
-			},
+			_id: post._id.toString(),
+			content: post.content,
 			media: post.media || [],
-			likes: post.likes || [],
-			shares: post.shares || [],
-			comments:
-				post.comments?.map((comment: any) => ({
-					id: comment._id.toString(),
-					_id: comment._id.toString(),
-					user: {
-						_id: comment.user._id.toString(),
-						name: comment.user.name,
-						username: comment.user.username,
-						avatar: comment.user.avatar,
-					},
-					content: comment.content,
-					timePosted: comment.createdAt.toISOString(),
-					likes: comment.likes || [],
-				})) || [],
-			createdAt: (post as any).createdAt.toISOString(),
-			updatedAt: (post as any).updatedAt.toISOString(),
+			likes: post.likes?.map((id: any) => id.toString()) || [],
+			shares: post.shares?.map((id: any) => id.toString()) || [],
+			userId: {
+				_id: post.userId._id.toString(),
+				name: post.userId.name,
+				username: post.userId.username,
+				avatar: post.userId.avatar,
+			},
+			comments: post.comments?.map((comment: any) => ({
+				_id: comment._id.toString(),
+				content: comment.content,
+				userId: {
+					_id: comment.userId._id.toString(),
+					name: comment.userId.name,
+					username: comment.userId.username,
+					avatar: comment.userId.avatar,
+				},
+				createdAt: comment.createdAt.toISOString(),
+				updatedAt: comment.updatedAt.toISOString(),
+			})) || [],
+			createdAt: post.createdAt.toISOString(),
+			updatedAt: post.updatedAt.toISOString(),
 		};
 
 		return { success: true, post: plainPost };
 	} catch (error) {
 		console.error("Get post error:", error);
 		return { error: "Failed to get post" };
-	}
-}
-
-export async function getExplore(category?: string, page = 1) {
-	try {
-		const session = await getServerSession(authOptions);
-
-		if (!session || !session.user) {
-			return { error: "You must be logged in to explore posts" };
-		}
-
-		const posts = await getExplorePosts(session.user.id, category, page);
-
-		return { success: true, posts };
-	} catch (error) {
-		console.error("Get explore error:", error);
-		return { error: "Failed to get explore posts" };
 	}
 }
 

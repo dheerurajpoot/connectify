@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 
 interface Comment {
-	id: string;
-	user: {
+	_id: string;
+	userId: {
 		name: string;
 		username: string;
 		avatar: string;
@@ -30,7 +30,7 @@ export default function SinglePostComments({
 	);
 	const [commentLikes, setCommentLikes] = useState<Record<string, number>>(
 		comments.reduce((acc, comment) => {
-			acc[comment.id] = comment.likes;
+			acc[comment._id] = comment.likes;
 			return acc;
 		}, {} as Record<string, number>)
 	);
@@ -60,24 +60,24 @@ export default function SinglePostComments({
 				</p>
 			) : (
 				comments.map((comment) => (
-					<div key={comment.id} className='flex gap-3'>
-						<Link href={`/profile/${comment.user.username}`}>
+					<div key={comment._id} className='flex gap-3'>
+						<Link href={`/profile/${comment?.userId?.username}`}>
 							<Avatar className='h-8 w-8 border border-primary/10'>
 								<AvatarImage
-									src={comment.user.avatar}
-									alt={comment.user.name}
+									src={comment?.userId?.avatar}
+									alt={comment?.userId?.name}
 								/>
 								<AvatarFallback>
-									{comment.user.name.slice(0, 2)}
+									{comment?.userId?.name.slice(0, 2)}
 								</AvatarFallback>
 							</Avatar>
 						</Link>
 						<div className='flex-1'>
 							<div className='flex flex-wrap items-start gap-x-1'>
 								<Link
-									href={`/profile/${comment.user.username}`}
+									href={`/profile/${comment?.userId?.username}`}
 									className='font-semibold hover:underline'>
-									{comment.user.username}
+									{comment?.userId?.username}
 								</Link>
 								<p className='text-sm'>{comment.content}</p>
 							</div>
@@ -96,18 +96,18 @@ export default function SinglePostComments({
 								variant='ghost'
 								size='icon'
 								className='h-8 w-8 rounded-full'
-								onClick={() => handleLikeComment(comment.id)}>
+								onClick={() => handleLikeComment(comment._id)}>
 								<Heart
 									className={`h-4 w-4 ${
-										likedComments[comment.id]
+										likedComments[comment._id]
 											? "fill-red-500 text-red-500"
 											: ""
 									}`}
 								/>
 							</Button>
-							{commentLikes[comment.id] > 0 && (
+							{commentLikes[comment._id] > 0 && (
 								<span className='text-xs font-medium'>
-									{commentLikes[comment.id]}
+									{commentLikes[comment._id]}
 								</span>
 							)}
 						</div>

@@ -34,7 +34,6 @@ import {
 	deleteUserPost,
 } from "@/app/actions/post-actions";
 import { useSession } from "next-auth/react";
-import { toast } from "@/components/ui/use-toast";
 import { PostPreviewDialog } from "./post-preview-dialog";
 
 interface PostProps {
@@ -108,21 +107,13 @@ export function Post({ post }: PostProps) {
 			const result = await deleteUserPost(post._id);
 			console.log(result);
 			if (result.success) {
-				toast({
-					title: "Post deleted",
-					description: "Your post has been deleted successfully",
-				});
 				// Refresh the page to update the feed
 				window.location.reload();
 			} else {
 				throw new Error(result.error);
 			}
 		} catch (error) {
-			toast({
-				title: "Error",
-				description: "Failed to delete post",
-				variant: "destructive",
-			});
+			console.log(error);
 		}
 	};
 
