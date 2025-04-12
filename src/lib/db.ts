@@ -128,11 +128,20 @@ export async function getSuggestedUsers(userId: string, limit = 5) {
 	const user = await User.findById(userId);
 	if (!user) throw new Error("User not found");
 
-	return User.find({
+	const users = await User.find({
 		_id: { $nin: [...user.following, userId] },
 	})
 		.limit(limit)
-		.select("name username avatar");
+		.select("name username avatar")
+		.lean();
+
+	// Convert ObjectIds to strings and ensure proper serialization
+	return users.map(user => ({
+		_id: user._id.toString(),
+		name: user.name,
+		username: user.username,
+		avatar: user.avatar || "",
+	}));
 }
 
 export async function searchUsers(query: string, currentUserId: string) {
@@ -525,4 +534,21 @@ export async function verifyCredentials(email: string, password: string) {
 	if (!isPasswordValid) return null;
 
 	return user;
+}
+
+export async function isUserFollowing(followerId: string, targetUsername: string) {
+	await connectDB();
+
+	try {
+		const targetUser = await User.findOne({ username: targetUsername }).lean<IUser & { _id: Types.ObjectId }>().exec();
+		if (!targetUser) return false;
+
+		const follower = await User.findById(followerId).lean<IUser & { _id: Types.ObjectId }>().exec();
+		if (!follower) return false;
+
+		return follower.following.some((id: Types.ObjectId) => id.toString() === targetUser._id.toString());
+	} catch (error) {
+		console.error('Error checking follow status:', error);
+		return false;
+	}
 }

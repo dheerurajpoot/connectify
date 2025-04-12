@@ -1,30 +1,16 @@
+import { getSuggested } from "@/app/actions/user-actions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FollowButton } from "@/components/follow-button";
 import Link from "next/link";
 
-const suggestedUsers = [
-	{
-		name: "Sophie Taylor",
-		username: "sophie",
-		avatar: "",
-		reason: "Followed by emma and 2 others",
-	},
-	{
-		name: "Daniel Roberts",
-		username: "daniel",
-		avatar: "",
-		reason: "New to Orbtao",
-	},
-	{
-		name: "Rachel Green",
-		username: "rachel",
-		avatar: "",
-		reason: "Suggested for you",
-	},
-];
+export async function SuggestedUsers() {
+	const { success, users } = await getSuggested();
+	if (!success || !users?.length) {
+		return null;
+	}
 
-export function SuggestedUsers() {
 	return (
 		<Card>
 			<CardHeader className='pb-3'>
@@ -33,14 +19,14 @@ export function SuggestedUsers() {
 				</CardTitle>
 			</CardHeader>
 			<CardContent className='grid gap-4'>
-				{suggestedUsers.map((user) => (
+				{users.map((user) => (
 					<div
-						key={user.username}
+						key={user._id}
 						className='flex items-center justify-between'>
 						<div className='flex items-center gap-3'>
 							<Avatar className='h-8 w-8'>
 								<AvatarImage
-									src={user.avatar}
+									src={user.avatar || ""}
 									alt={user.name}
 								/>
 								<AvatarFallback>
@@ -54,16 +40,14 @@ export function SuggestedUsers() {
 									{user.name}
 								</Link>
 								<p className='text-xs text-muted-foreground'>
-									{user.reason}
+									@{user.username}
 								</p>
 							</div>
 						</div>
-						<Button
-							variant='outline'
-							size='sm'
-							className='h-7 text-xs'>
-							Follow
-						</Button>
+						<FollowButton
+							username={user.username}
+							initialIsFollowing={false}
+						/>
 					</div>
 				))}
 				<Button

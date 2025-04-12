@@ -11,6 +11,8 @@ import {
 	Share2,
 	Bookmark,
 	MoreHorizontal,
+	Copy,
+	Check,
 } from "lucide-react";
 import {
 	DropdownMenu,
@@ -24,10 +26,13 @@ import {
 	deleteUserPost,
 	likeUnlikePost,
 } from "@/app/actions/post-actions";
+import { handleFollow } from "@/app/actions/profile-actions";
+import { checkFollowStatus } from "@/app/actions/user-actions";
 import { format } from "timeago.js";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Post {
 	_id: string;
@@ -53,11 +58,63 @@ interface PostPageClientProps {
 export function PostPageClient({ post }: PostPageClientProps) {
 	const { data: session } = useSession();
 	const router = useRouter();
+	const { toast } = useToast();
 	const isOwner = session?.user?.id === post.userId._id;
 	const [liked, setLiked] = useState(
 		post.likes?.includes(post.userId._id) || false
 	);
 	const [comment, setComment] = useState("");
+	const [isFollowing, setIsFollowing] = useState(false);
+	const [copied, setCopied] = useState(false);
+
+	// Check initial follow status
+	useEffect(() => {
+		if (session?.user?.id && !isOwner) {
+			checkFollowStatus(post.userId.username).then((result) => {
+				if (result.success) {
+					setIsFollowing(result.isFollowing);
+				}
+			});
+		}
+	}, [session?.user?.id, post.userId.username, isOwner]);
+
+	// Handle follow/unfollow
+	const handleFollowAction = async () => {
+		if (!session?.user) {
+			return toast({
+				title: "Please login to follow users",
+				variant: "destructive",
+			});
+		}
+
+		try {
+			const result = await handleFollow(post.userId.username, isFollowing, new FormData());
+
+			setIsFollowing(!isFollowing);
+			toast({
+				title: isFollowing
+					? `Unfollowed ${post.userId.username}`
+					: `Following ${post.userId.username}`,
+			});
+		} catch (error) {
+			console.error("Follow/unfollow error:", error);
+			toast({
+				title: "Failed to follow/unfollow user",
+				variant: "destructive",
+			});
+		}
+	};
+
+	// Handle copy link
+	const handleCopyLink = () => {
+		const postUrl = `${window.location.origin}/post/${post._id}`;
+		navigator.clipboard.writeText(postUrl);
+		setCopied(true);
+		toast({
+			title: "Post link copied to clipboard",
+		});
+		setTimeout(() => setCopied(false), 3000);
+	};
 
 	const handleDeletePost = async () => {
 		try {
@@ -152,25 +209,35 @@ export function PostPageClient({ post }: PostPageClientProps) {
 							<DropdownMenuContent
 								align='end'
 								className='w-48 rounded-xl p-1'>
-								{isOwner ? (
+								{!isOwner && (
+									<DropdownMenuItem
+										className='cursor-pointer rounded-lg'
+										onClick={handleFollowAction}>
+										{isFollowing ? "Unfollow" : "Follow"} @{post.userId.username}
+									</DropdownMenuItem>
+								)}
+								<DropdownMenuItem
+									className='cursor-pointer rounded-lg'
+									onClick={handleCopyLink}>
+									{copied ? (
+										<>
+											<Check className='w-4 h-4 mr-2' />
+											Copied
+										</>
+									) : (
+										<>
+											<Copy className='w-4 h-4 mr-2' />
+											Copy Link
+										</>
+									)}
+								</DropdownMenuItem>
+								{isOwner && (
 									<DropdownMenuItem
 										className='cursor-pointer rounded-lg text-red-500 focus:text-red-500'
 										onClick={handleDeletePost}>
 										Delete Post
 									</DropdownMenuItem>
-								) : (
-									<>
-										<DropdownMenuItem className='cursor-pointer rounded-lg'>
-											Report Post
-										</DropdownMenuItem>
-										<DropdownMenuItem className='cursor-pointer rounded-lg'>
-											Unfollow @{post.userId.username}
-										</DropdownMenuItem>
-									</>
 								)}
-								<DropdownMenuItem className='cursor-pointer rounded-lg'>
-									Copy Link
-								</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
 					</div>

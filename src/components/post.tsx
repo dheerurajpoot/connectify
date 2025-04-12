@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	Card,
@@ -20,6 +20,8 @@ import {
 	MoreHorizontal,
 	Send,
 	BadgeCheck,
+	Check,
+	Copy,
 } from "lucide-react";
 import {
 	DropdownMenu,
@@ -33,6 +35,9 @@ import {
 	addPostComment,
 	deleteUserPost,
 } from "@/app/actions/post-actions";
+import { handleFollow } from "@/app/actions/profile-actions";
+import { checkFollowStatus } from "@/app/actions/user-actions";
+import { useToast } from "@/components/ui/use-toast";
 import { useSession } from "next-auth/react";
 import { PostPreviewDialog } from "./post-preview-dialog";
 
@@ -56,10 +61,13 @@ interface PostProps {
 
 export function Post({ post }: PostProps) {
 	const { data: session } = useSession();
+	const { toast } = useToast();
+	const [isPending, startTransition] = useTransition();
 	const [liked, setLiked] = useState(
 		post.likes?.includes(post.userId._id) || false
 	);
 	const isOwner = session?.user?.id === post.userId._id;
+	const [isFollowing, setIsFollowing] = useState(false);
 	const [bookmarked, setBookmarked] = useState(false);
 	const [comment, setComment] = useState("");
 	const [showComments, setShowComments] = useState(false);
@@ -69,6 +77,48 @@ export function Post({ post }: PostProps) {
 	);
 	const [sharesCount, setSharesCount] = useState(post.shares?.length || 0);
 	const [showPreview, setShowPreview] = useState(false);
+	const [copied, setCopied] = useState(false);
+
+	// Check initial follow status
+	useEffect(() => {
+		if (session?.user?.id && !isOwner) {
+			checkFollowStatus(post.userId.username).then((result) => {
+				if (result.success) {
+					setIsFollowing(result.isFollowing);
+				}
+			});
+		}
+	}, [session?.user?.id, post.userId.username, isOwner]);
+
+	// Handle follow/unfollow
+	const handleFollowAction = async () => {
+		if (!session?.user) {
+			toast({
+				description: "You must be logged in to follow users",
+				variant: "destructive",
+			});
+			return;
+		}
+
+		startTransition(async () => {
+			try {
+				const formData = new FormData();
+				await handleFollow(post.userId.username, isFollowing, formData);
+				setIsFollowing(!isFollowing);
+				toast({
+					description: !isFollowing
+						? `Following @${post.userId.username}`
+						: `Unfollowed @${post.userId.username}`,
+				});
+			} catch (error) {
+				console.error("Error following/unfollowing:", error);
+				toast({
+					description: "Failed to update follow status",
+					variant: "destructive",
+				});
+			}
+		});
+	};
 
 	const handleLike = async () => {
 		try {
@@ -174,13 +224,37 @@ export function Post({ post }: PostProps) {
 									<DropdownMenuItem className='cursor-pointer rounded-lg'>
 										Report Post
 									</DropdownMenuItem>
-									<DropdownMenuItem className='cursor-pointer rounded-lg'>
-										Unfollow @{post.userId.username}
+									<DropdownMenuItem 
+										className='cursor-pointer rounded-lg'
+										onClick={handleFollowAction}
+										disabled={isPending}
+									>
+										{isPending ? "Loading..." : 
+											isFollowing ? `Unfollow @${post.userId.username}` : `Follow @${post.userId.username}`
+										}
 									</DropdownMenuItem>
 								</>
 							)}
-							<DropdownMenuItem className='cursor-pointer rounded-lg'>
-								Copy Link
+							<DropdownMenuItem 
+								className='cursor-pointer rounded-lg'
+								onClick={() => {
+									const url = `${window.location.origin}/post/${post._id}`;
+									navigator.clipboard.writeText(url);
+									setCopied(true);
+									toast({
+										description: "Link copied to clipboard!",
+									});
+									setTimeout(() => setCopied(false), 3000);
+								}}
+							>
+								<div className="flex items-center gap-2">
+									{copied ? (
+										<Check className="h-4 w-4" />
+									) : (
+										<Copy className="h-4 w-4" />
+									)}
+									{copied ? "Copied!" : "Copy Link"}
+								</div>
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>

@@ -6,6 +6,7 @@ import {
 	unfollowUser,
 	getSuggestedUsers,
 	searchUsers,
+	isUserFollowing,
 } from "@/lib/db";
 import { createNotification } from "@/lib/db";
 import { getServerSession } from "next-auth";
@@ -73,5 +74,20 @@ export async function searchPeople(query: string) {
 	} catch (error) {
 		console.error("Search users error:", error);
 		return { error: "Failed to search users" };
+	}
+}
+
+export async function checkFollowStatus(targetUsername: string) {
+	try {
+		const session = await getServerSession(authOptions);
+		if (!session?.user?.id) {
+			return { success: false, isFollowing: false };
+		}
+
+		const isFollowing = await isUserFollowing(session.user.id, targetUsername);
+		return { success: true, isFollowing };
+	} catch (error) {
+		console.error('Error checking follow status:', error);
+		return { success: false, isFollowing: false };
 	}
 }
