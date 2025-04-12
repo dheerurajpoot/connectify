@@ -10,9 +10,10 @@ import {
 	Paperclip,
 	MoreVertical,
 	Loader2,
+	ArrowLeft,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { io, type Socket } from "socket.io-client";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { getUserMessages, sendNewMessage } from "@/app/actions/message-actions";
 import { Message, User } from "@/types";
 import { formatDistanceToNow } from "date-fns";
+import { useIsMobile } from "../hooks/use-mobile";
 
 interface DBMessage {
 	_id: {
@@ -56,6 +58,8 @@ export function MessageContent() {
 	const { data: session } = useSession();
 	const socketRef = useRef<Socket | null>(null);
 	const [isAtBottom, setIsAtBottom] = useState(true);
+	const isMobile = useIsMobile();
+	const router = useRouter();
 
 	useEffect(() => {
 		if (partnerId && session?.user?.id) {
@@ -107,18 +111,18 @@ export function MessageContent() {
 
 				socketRef.current.on("message", (message: any) => {
 					if (message.senderId === partnerId) {
-							const newMsg: Message = {
-						...message,
-						senderId: partner!,
-						receiverId: {
-							_id: session?.user?.id || "",
-							name: session?.user?.name || "",
-							username: session?.user?.username || "",
-							avatar: session?.user?.image,
-						},
-					};
-					// Add new message to the end (chronological order)
-					setMessages((prev) => [...prev, newMsg]);
+						const newMsg: Message = {
+							...message,
+							senderId: partner!,
+							receiverId: {
+								_id: session?.user?.id || "",
+								name: session?.user?.name || "",
+								username: session?.user?.username || "",
+								avatar: session?.user?.image,
+							},
+						};
+						// Add new message to the end (chronological order)
+						setMessages((prev) => [...prev, newMsg]);
 						scrollToBottom();
 					}
 				});
@@ -340,14 +344,40 @@ export function MessageContent() {
 	}
 
 	return (
-		<div className='flex-1 flex flex-col h-full'>
+		<div
+			className={cn(
+				"flex-1 flex flex-col h-[calc(100vh-200px)] pt-12 pb-16 message-content",
+				isMobile && !partnerId ? "hidden md:flex" : "flex"
+			)}>
 			{/* Header */}
-			<div className='p-4 border-b'>
+			<div className='p-4 border-b top-12 z-10'>
 				<div className='flex items-center gap-2'>
+					{isMobile && partnerId && (
+						<Button
+							variant='ghost'
+							size='icon'
+							onClick={() => {
+								router.push("/messages");
+								// Show message list on mobile
+								const messageList =
+									document.querySelector(".message-list");
+								if (messageList) {
+									messageList.classList.remove("hidden");
+								}
+								// Hide message content on mobile
+								const messageContent =
+									document.querySelector(".message-content");
+								if (messageContent) {
+									messageContent.classList.add("hidden");
+								}
+							}}>
+							<ArrowLeft className='h-5 w-5' />
+						</Button>
+					)}
 					<Avatar>
 						<AvatarImage src={partner?.avatar} />
 						<AvatarFallback>
-							{partner?.name?.charAt(0) || "?"}
+							{partner?.name?.slice(0, 2) || "?"}
 						</AvatarFallback>
 					</Avatar>
 					<div>
@@ -377,7 +407,7 @@ export function MessageContent() {
 			{/* Messages */}
 			<div
 				ref={messagesContainerRef}
-				className='flex-1 p-4 overflow-y-auto flex flex-col justify-start'>
+				className='flex-1 px-4 flex flex-col justify-start'>
 				{loading ? (
 					<div className='flex items-center justify-center h-full'>
 						<Loader2 className='w-6 h-6 animate-spin' />
@@ -389,7 +419,9 @@ export function MessageContent() {
 						</p>
 					</div>
 				) : (
-					<div className='space-y-4 flex flex-col' ref={messagesEndRef}>
+					<div
+						className='space-y-4 flex flex-col overflow-scroll h-[calc(100vh-260px)]'
+						ref={messagesEndRef}>
 						{messages.map((message) => (
 							<div
 								key={message._id}

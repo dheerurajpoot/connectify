@@ -7,9 +7,13 @@ import { Search } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { getConversations, searchUsersToMessage } from "@/app/actions/message-actions";
+import {
+	getConversations,
+	searchUsersToMessage,
+} from "@/app/actions/message-actions";
 import { useSession } from "next-auth/react";
 import { useToast } from "../hooks/use-toast";
+import { useIsMobile } from "../hooks/use-mobile";
 interface Conversation {
 	user: {
 		_id: string;
@@ -43,6 +47,7 @@ export function MessageList() {
 	const selectedConversation = searchParams.get("id");
 	const { toast } = useToast();
 	const { data: session } = useSession();
+	const isMobile = useIsMobile();
 
 	useEffect(() => {
 		if (session?.user?.id) {
@@ -116,10 +121,12 @@ export function MessageList() {
 				.includes(searchQuery.toLowerCase())
 	);
 
-
-
 	return (
-		<div className='flex h-full flex-col'>
+		<div
+			className={cn(
+				"flex h-full mt-15 flex-col message-list",
+				isMobile && selectedConversation ? "hidden md:flex" : "flex"
+			)}>
 			<div className='border-b p-4'>
 				<div className='relative'>
 					<Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
@@ -144,9 +151,30 @@ export function MessageList() {
 							href={`/messages?id=${user._id}`}
 							className={cn(
 								"flex items-center gap-3 border-b p-4 hover:bg-accent",
-								selectedConversation === user._id &&
-									"bg-accent"
-							)}>
+								selectedConversation === user._id && "bg-accent"
+							)}
+							onClick={(e) => {
+								if (isMobile) {
+									e.preventDefault();
+									router.push(`/messages?id=${user._id}`);
+									// Hide message list on mobile
+									const messageList =
+										document.querySelector(".message-list");
+									if (messageList) {
+										messageList.classList.add("hidden");
+									}
+									// Show message content on mobile
+									const messageContent =
+										document.querySelector(
+											".message-content"
+										);
+									if (messageContent) {
+										messageContent.classList.remove(
+											"hidden"
+										);
+									}
+								}
+							}}>
 							<Avatar>
 								<AvatarImage
 									src={user.avatar}
@@ -175,15 +203,39 @@ export function MessageList() {
 						</p>
 					</div>
 				) : (
-filteredConversations.map((conversation) => (
+					filteredConversations.map((conversation) => (
 						<Link
 							key={conversation.user._id}
 							href={`/messages?id=${conversation.user._id}`}
 							className={cn(
 								"flex items-center gap-3 border-b p-4 hover:bg-accent",
-								selectedConversation === conversation.user._id &&
-									"bg-accent"
-							)}>
+								selectedConversation ===
+									conversation.user._id && "bg-accent"
+							)}
+							onClick={(e) => {
+								if (isMobile) {
+									e.preventDefault();
+									router.push(
+										`/messages?id=${conversation.user._id}`
+									);
+									// Hide message list on mobile
+									const messageList =
+										document.querySelector(".message-list");
+									if (messageList) {
+										messageList.classList.add("hidden");
+									}
+									// Show message content on mobile
+									const messageContent =
+										document.querySelector(
+											".message-content"
+										);
+									if (messageContent) {
+										messageContent.classList.remove(
+											"hidden"
+										);
+									}
+								}
+							}}>
 							<div className='relative'>
 								<Avatar>
 									<AvatarImage
@@ -209,16 +261,19 @@ filteredConversations.map((conversation) => (
 										{conversation.user.name}
 									</p>
 									<p className='text-xs text-muted-foreground'>
-										{new Date(conversation.lastMessage.createdAt).toLocaleTimeString([], {
-											hour: '2-digit',
-											minute: '2-digit'
+										{new Date(
+											conversation.lastMessage.createdAt
+										).toLocaleTimeString([], {
+											hour: "2-digit",
+											minute: "2-digit",
 										})}
 									</p>
 								</div>
 								<p
 									className={cn(
 										"truncate text-sm text-muted-foreground",
-										conversation.unreadCount > 0 && "text-foreground"
+										conversation.unreadCount > 0 &&
+											"text-foreground"
 									)}>
 									{conversation.lastMessage.content}
 								</p>

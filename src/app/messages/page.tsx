@@ -12,12 +12,12 @@ export const metadata: Metadata = {
 export default function MessagesPage() {
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col md:flex-row">
-      <div className="w-full border-r md:w-80">
+      <div className="w-full border-r md:w-80 md:block">
         <Suspense fallback={<MessageSkeleton />}>
           <MessageList />
         </Suspense>
       </div>
-      <div className="flex-1">
+      <div className="flex-1 md:block">
         <MessageContent />
       </div>
     </div>
