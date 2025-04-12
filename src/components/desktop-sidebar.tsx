@@ -80,7 +80,6 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 			console.log("Sign out error", error);
 		}
 	};
-
 	return (
 		<div
 			className={cn(
@@ -124,7 +123,7 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 				<div className='flex items-center gap-3'>
 					<Avatar>
 						<AvatarImage
-							src={session?.user?.image || ""}
+							src={session?.user?.avatar || ""}
 							alt='User'
 						/>
 						<AvatarFallback>
@@ -142,20 +141,58 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 						</p>
 					</div>
 					<Sheet>
+						<SheetTitle></SheetTitle>
+						<SheetDescription></SheetDescription>
 						<SheetTrigger asChild>
 							<Button
 								variant='ghost'
 								size='icon'
 								className='rounded-full'>
 								<Menu className='h-5 w-5' />
+								<span className='sr-only'>Menu</span>
 							</Button>
 						</SheetTrigger>
-						<SheetContent side='left' className='px-6 py-8'>
-							<SheetTitle>Menu</SheetTitle>
-							<SheetDescription>
-								Manage your account settings and preferences.
-							</SheetDescription>
-							<div className='grid gap-4 py-4'>
+						<SheetContent side='left' className='flex flex-col p-8'>
+							<div className='flex items-center gap-3 border-b pb-4'>
+								<Avatar>
+									<AvatarImage
+										src={session?.user?.avatar || ""}
+										alt='User'
+									/>
+									<AvatarFallback>
+										{session?.user?.name?.slice(0, 2) ||
+											"U"}
+									</AvatarFallback>
+								</Avatar>
+								<div className='flex-1'>
+									<p className='text-sm font-medium'>
+										{session?.user?.name}
+									</p>
+									<p className='text-xs text-muted-foreground'>
+										@{session?.user.username}
+									</p>
+								</div>
+							</div>
+
+							<nav className='flex-1 py-4'>
+								<div className='grid gap-1'>
+									{navItems.map((item) => (
+										<Link
+											key={item.href}
+											href={item.href}
+											className={cn(
+												"flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent",
+												pathname === item.href
+													? "bg-accent text-accent-foreground"
+													: "text-muted-foreground"
+											)}>
+											{item.name}
+										</Link>
+									))}
+								</div>
+							</nav>
+
+							<div className='border-t pt-4'>
 								<div className='grid gap-2'>
 									<Link
 										href='/settings'
@@ -167,11 +204,14 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 										className='flex items-center gap-2 rounded-md px-2 py-1 hover:bg-accent'>
 										Help Center
 									</Link>
-									<ThemeToggle />
+									<div className='flex items-center gap-2 px-2 py-1'>
+										<span>Theme</span>
+										<ThemeToggle />
+									</div>
 									<Button
 										variant='ghost'
-										className='flex items-center gap-2 justify-start px-2 py-1 hover:bg-accent'
-										onClick={handleLogout}>
+										onClick={handleLogout}
+										className='flex items-center gap-2 justify-start px-2 py-1 hover:bg-accent'>
 										<LogOut className='h-4 w-4' />
 										Log Out
 									</Button>

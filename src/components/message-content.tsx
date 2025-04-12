@@ -375,7 +375,7 @@ export function MessageContent() {
 						</Button>
 					)}
 					<Avatar>
-						<AvatarImage src={partner?.avatar} />
+						<AvatarImage src={partner?.avatar} className='object-cover' />
 						<AvatarFallback>
 							{partner?.name?.slice(0, 2) || "?"}
 						</AvatarFallback>
@@ -435,6 +435,7 @@ export function MessageContent() {
 									<Avatar className='w-6 h-6'>
 										<AvatarImage
 											src={message.senderId.avatar}
+											className='object-cover'
 										/>
 										<AvatarFallback>
 											{message.senderId.name?.charAt(0) ||

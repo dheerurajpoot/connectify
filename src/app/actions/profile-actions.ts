@@ -11,6 +11,7 @@ import {
 } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { uploadImage } from "@/lib/image-utils";
 
 export async function getProfileData(username: string) {
 	try {
@@ -27,25 +28,29 @@ export async function getProfileData(username: string) {
 		const isOwnProfile = session?.user?.id === user._id.toString();
 
 		// Get current user's following list
-		const currentUser = session?.user?.id ? await getUserById(session.user.id) : null;
+		const currentUser = session?.user?.id
+			? await getUserById(session.user.id)
+			: null;
 
 		// Convert user to plain object and ensure followers/following are populated
 		const userObj = user.toObject();
 		const populatedUser = {
 			...userObj,
 			_id: userObj._id.toString(),
-			followers: userObj.followers?.map((f: any) => ({
-				_id: f._id.toString(),
-				name: f.name,
-				username: f.username,
-				avatar: f.avatar,
-			})) || [],
-			following: userObj.following?.map((f: any) => ({
-				_id: f._id.toString(),
-				name: f.name,
-				username: f.username,
-				avatar: f.avatar,
-			})) || [],
+			followers:
+				userObj.followers?.map((f: any) => ({
+					_id: f._id.toString(),
+					name: f.name,
+					username: f.username,
+					avatar: f.avatar,
+				})) || [],
+			following:
+				userObj.following?.map((f: any) => ({
+					_id: f._id.toString(),
+					name: f.name,
+					username: f.username,
+					avatar: f.avatar,
+				})) || [],
 		};
 
 		return {
@@ -53,7 +58,8 @@ export async function getProfileData(username: string) {
 			posts,
 			isFollowing,
 			isOwnProfile,
-			currentUserFollowing: currentUser?.following?.map((f: any) => f._id.toString()) || [],
+			currentUserFollowing:
+				currentUser?.following?.map((f: any) => f._id.toString()) || [],
 		};
 	} catch (error) {
 		console.error("Error fetching profile data:", error);
@@ -104,12 +110,19 @@ export async function updateProfile(formData: FormData) {
 			return { error: "Not authenticated" };
 		}
 
+		// Convert File to Buffer for uploadImage
+		const mediaFile = formData.get("avatar") as File;
+		const buffer = Buffer.from(await mediaFile.arrayBuffer());
+		const mediaUrl = await uploadImage(buffer);
+
+		console.log(mediaUrl);
+
 		const name = formData.get("name") as string;
 		const username = formData.get("username") as string;
 		const bio = formData.get("bio") as string;
 		const location = formData.get("location") as string;
 		const website = formData.get("website") as string;
-		const avatar = formData.get("avatar") as string;
+		const avatarData = mediaUrl;
 
 		// Validate inputs
 		if (!name || !username) {
@@ -122,13 +135,21 @@ export async function updateProfile(formData: FormData) {
 			return { error: "Username is already taken" };
 		}
 
+		let avatar;
+		if (avatarData && avatarData.startsWith("data:image")) {
+			// Convert base64 to buffer
+			const base64Data = avatarData.split(",")[1];
+			const buffer = Buffer.from(base64Data, "base64");
+			avatar = await uploadImage(buffer);
+		}
+
 		const updatedUser = await updateUser(session.user.id, {
 			name,
 			username,
 			bio,
 			location,
 			website,
-			avatar,
+			...(avatar && { avatar }), // Only include avatar if it was uploaded
 		});
 
 		if (!updatedUser) {

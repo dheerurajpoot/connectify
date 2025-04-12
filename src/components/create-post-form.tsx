@@ -83,11 +83,9 @@ export function CreatePostForm() {
 				<div className='flex gap-3'>
 					<Avatar>
 						<AvatarImage
-							src={
-								session?.user?.image ||
-								"/placeholder.svg?height=40&width=40"
-							}
+							src={session?.user?.image || ""}
 							alt={session?.user?.name || "Profile"}
+							className='object-cover'
 						/>
 						<AvatarFallback>
 							{session?.user?.name?.slice(0, 2) || "U"}

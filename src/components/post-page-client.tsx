@@ -88,7 +88,11 @@ export function PostPageClient({ post }: PostPageClientProps) {
 		}
 
 		try {
-			const result = await handleFollow(post.userId.username, isFollowing, new FormData());
+			const result = await handleFollow(
+				post.userId.username,
+				isFollowing,
+				new FormData()
+			);
 
 			setIsFollowing(!isFollowing);
 			toast({
@@ -179,6 +183,7 @@ export function PostPageClient({ post }: PostPageClientProps) {
 								<AvatarImage
 									src={post.userId.avatar}
 									alt={post.userId.name}
+									className='object-cover'
 								/>
 								<AvatarFallback>
 									{post.userId.name.slice(0, 2)}
@@ -213,7 +218,8 @@ export function PostPageClient({ post }: PostPageClientProps) {
 									<DropdownMenuItem
 										className='cursor-pointer rounded-lg'
 										onClick={handleFollowAction}>
-										{isFollowing ? "Unfollow" : "Follow"} @{post.userId.username}
+										{isFollowing ? "Unfollow" : "Follow"} @
+										{post.userId.username}
 									</DropdownMenuItem>
 								)}
 								<DropdownMenuItem

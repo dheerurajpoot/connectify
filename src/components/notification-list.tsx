@@ -228,6 +228,7 @@ export function NotificationList({ type }: NotificationListProps) {
 									<AvatarImage
 										src={notification.actorId.avatar || ""}
 										alt={notification.actorId.name}
+										className='object-cover'
 									/>
 									<AvatarFallback>
 										{notification.actorId.name.slice(0, 2)}

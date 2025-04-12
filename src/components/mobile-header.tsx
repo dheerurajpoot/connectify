@@ -101,6 +101,7 @@ export function MobileHeader() {
 								<AvatarImage
 									src={session?.user?.image || ""}
 									alt='User'
+									className='object-cover'
 								/>
 								<AvatarFallback>
 									{session?.user?.name?.charAt(0) || "U"}

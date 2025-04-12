@@ -196,6 +196,7 @@ export function Stories() {
 								<AvatarImage
 									src={session?.user?.image || ""}
 									alt='Your story'
+									className='object-cover'
 								/>
 								<AvatarFallback>
 									{session?.user?.name?.slice(0, 2) || "YS"}
@@ -290,6 +291,7 @@ export function Stories() {
 											<AvatarImage
 												src={story.user?.avatar || ""}
 												alt={story.user?.name || "User"}
+												className='object-cover'
 											/>
 											<AvatarFallback>
 												{story.user?.name?.slice(
@@ -326,6 +328,7 @@ export function Stories() {
 														story.user?.name ||
 														"User"
 													}
+													className='object-cover'
 												/>
 												<AvatarFallback>
 													{story.user?.name?.slice(
@@ -385,13 +388,13 @@ export function Stories() {
 									<Avatar className='h-8 w-8'>
 										<AvatarImage
 											src={
-												selectedStory.user?.avatar ||
-												"/placeholder.svg?height=32&width=32"
+												selectedStory.user?.avatar || ""
 											}
 											alt={
 												selectedStory.user?.name ||
 												"User"
 											}
+											className='object-cover'
 										/>
 										<AvatarFallback>
 											{selectedStory.user?.name?.slice(

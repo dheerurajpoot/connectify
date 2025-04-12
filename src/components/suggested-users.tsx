@@ -28,6 +28,7 @@ export async function SuggestedUsers() {
 								<AvatarImage
 									src={user.avatar || ""}
 									alt={user.name}
+									className='object-cover'
 								/>
 								<AvatarFallback>
 									{user.name.slice(0, 2)}

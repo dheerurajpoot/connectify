@@ -70,6 +70,7 @@ export default async function ProfilePage({ params }: Props) {
 						<AvatarImage
 							src={user.avatar || ""}
 							alt={user.username}
+							className='object-cover'
 						/>
 						<AvatarFallback>
 							{user.username.slice(0, 2).toUpperCase()}

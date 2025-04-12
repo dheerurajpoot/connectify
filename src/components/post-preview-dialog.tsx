@@ -83,6 +83,7 @@ export function PostPreviewDialog({
 							<AvatarImage
 								src={post.userId.avatar}
 								alt={post.userId.name}
+								className='object-cover'
 							/>
 							<AvatarFallback>
 								{post.userId.name.slice(0, 2)}

@@ -124,7 +124,7 @@ export function MessageList() {
 	return (
 		<div
 			className={cn(
-				"flex h-full mt-15 flex-col message-list",
+				"flex h-full mt-15 md:mt-0 flex-col message-list",
 				isMobile && selectedConversation ? "hidden md:flex" : "flex"
 			)}>
 			<div className='border-b p-4'>

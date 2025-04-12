@@ -180,6 +180,7 @@ export function Post({ post }: PostProps) {
 							<AvatarImage
 								src={post.userId.avatar}
 								alt={post.userId.name}
+								className='object-cover'
 							/>
 							<AvatarFallback>
 								{post.userId.name.slice(0, 2)}
@@ -224,34 +225,35 @@ export function Post({ post }: PostProps) {
 									<DropdownMenuItem className='cursor-pointer rounded-lg'>
 										Report Post
 									</DropdownMenuItem>
-									<DropdownMenuItem 
+									<DropdownMenuItem
 										className='cursor-pointer rounded-lg'
 										onClick={handleFollowAction}
-										disabled={isPending}
-									>
-										{isPending ? "Loading..." : 
-											isFollowing ? `Unfollow @${post.userId.username}` : `Follow @${post.userId.username}`
-										}
+										disabled={isPending}>
+										{isPending
+											? "Loading..."
+											: isFollowing
+											? `Unfollow @${post.userId.username}`
+											: `Follow @${post.userId.username}`}
 									</DropdownMenuItem>
 								</>
 							)}
-							<DropdownMenuItem 
+							<DropdownMenuItem
 								className='cursor-pointer rounded-lg'
 								onClick={() => {
 									const url = `${window.location.origin}/post/${post._id}`;
 									navigator.clipboard.writeText(url);
 									setCopied(true);
 									toast({
-										description: "Link copied to clipboard!",
+										description:
+											"Link copied to clipboard!",
 									});
 									setTimeout(() => setCopied(false), 3000);
-								}}
-							>
-								<div className="flex items-center gap-2">
+								}}>
+								<div className='flex items-center gap-2'>
 									{copied ? (
-										<Check className="h-4 w-4" />
+										<Check className='h-4 w-4' />
 									) : (
-										<Copy className="h-4 w-4" />
+										<Copy className='h-4 w-4' />
 									)}
 									{copied ? "Copied!" : "Copy Link"}
 								</div>

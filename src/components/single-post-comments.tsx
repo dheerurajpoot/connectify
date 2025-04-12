@@ -66,6 +66,7 @@ export default function SinglePostComments({
 								<AvatarImage
 									src={comment?.userId?.avatar}
 									alt={comment?.userId?.name}
+									className='object-cover'
 								/>
 								<AvatarFallback>
 									{comment?.userId?.name.slice(0, 2)}
