@@ -67,12 +67,8 @@ export default function RootLayout({
 		<html lang='en' suppressHydrationWarning>
 			<head>
 				<link rel='manifest' href='/manifest.json' />
-				<link
-					rel='icon'
-					href='/placeholder-logo.svg'
-					type='image/svg+xml'
-				/>
-				<link rel='apple-touch-icon' href='/placeholder-logo.svg' />
+				<link rel='icon' href='/orbtao.svg' type='image/svg+xml' />
+				<link rel='apple-touch-icon' href='/orbtao.svg' />
 				<meta name='apple-mobile-web-app-capable' content='yes' />
 				<meta name='theme-color' content='#000000' />
 			</head>

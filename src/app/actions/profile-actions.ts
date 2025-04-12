@@ -7,6 +7,7 @@ import {
 	updateUser,
 	getUserPosts,
 	createNotification,
+	getUserById,
 } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -25,11 +26,34 @@ export async function getProfileData(username: string) {
 		);
 		const isOwnProfile = session?.user?.id === user._id.toString();
 
+		// Get current user's following list
+		const currentUser = session?.user?.id ? await getUserById(session.user.id) : null;
+
+		// Convert user to plain object and ensure followers/following are populated
+		const userObj = user.toObject();
+		const populatedUser = {
+			...userObj,
+			_id: userObj._id.toString(),
+			followers: userObj.followers?.map((f: any) => ({
+				_id: f._id.toString(),
+				name: f.name,
+				username: f.username,
+				avatar: f.avatar,
+			})) || [],
+			following: userObj.following?.map((f: any) => ({
+				_id: f._id.toString(),
+				name: f.name,
+				username: f.username,
+				avatar: f.avatar,
+			})) || [],
+		};
+
 		return {
-			user,
+			user: populatedUser,
 			posts,
 			isFollowing,
 			isOwnProfile,
+			currentUserFollowing: currentUser?.following?.map((f: any) => f._id.toString()) || [],
 		};
 	} catch (error) {
 		console.error("Error fetching profile data:", error);

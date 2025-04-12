@@ -6,7 +6,7 @@ import { ProfileFollowers } from "@/components/profile-followers";
 import { Suspense } from "react";
 import { ProfileSkeleton } from "@/components/skeletons/profile-skeleton";
 import type { Metadata } from "next";
-import { getProfileData, handleFollow } from "@/app/actions/profile-actions";
+import { getProfileData } from "@/app/actions/profile-actions";
 import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -49,8 +49,14 @@ export default async function ProfilePage({ params }: Props) {
 		redirect("/auth/login");
 	}
 
-	const { user, posts, isFollowing, isOwnProfile, error } =
-		await getProfileData(username);
+	const {
+		user,
+		posts,
+		isFollowing,
+		isOwnProfile,
+		error,
+		currentUserFollowing,
+	} = await getProfileData(username);
 	if (error || !user) {
 		notFound();
 	}
@@ -89,7 +95,7 @@ export default async function ProfilePage({ params }: Props) {
 							<div className='flex gap-2'>
 								<FollowButton
 									username={user.username}
-									initialIsFollowing={isFollowing}
+									initialIsFollowing={isFollowing || false}
 								/>
 								<MessageButton
 									userId={user._id.toString()}
@@ -152,7 +158,12 @@ export default async function ProfilePage({ params }: Props) {
 					</Suspense>
 				</TabsContent>
 				<TabsContent value='followers'>
-					<ProfileFollowers username={user.username} />
+					<ProfileFollowers
+						username={user.username}
+						followers={user.followers}
+						following={user.following}
+						currentUserFollowing={currentUserFollowing || []}
+					/>
 				</TabsContent>
 			</Tabs>
 		</div>
