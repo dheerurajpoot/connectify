@@ -183,14 +183,15 @@ export async function createPost(
 export async function getPostById(id: string) {
 	await connectDB();
 	return Post.findById(id)
-		.populate("userId", "name username avatar")
+		.populate("userId", "_id name username avatar")
 		.populate({
 			path: "comments",
 			populate: {
 				path: "userId",
 				select: "name username avatar",
 			},
-		});
+		})
+		.lean();
 }
 
 export async function getFeedPosts(userId: string, page = 1, limit = 100) {
@@ -204,8 +205,12 @@ export async function getFeedPosts(userId: string, page = 1, limit = 100) {
 	// Get posts from following users and latest posts from all users
 	return Post.find({
 		$or: [
+			{
+				createdAt: {
+					$gte: new Date(Date.now() - 48 * 60 * 60 * 1000),
+				},
+			},
 			{ userId: { $in: [...user.following, userId] } },
-			{ createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } }, // Posts from last 24 hours
 		],
 	})
 		.sort({ createdAt: -1 })
@@ -274,7 +279,13 @@ export async function addComment(
 	post.comments.push(newComment._id as unknown as mongoose.Types.ObjectId);
 	await post.save();
 
-	return newComment;
+	// Populate and convert to plain object
+	const populatedComment = await newComment.populate(
+		"userId",
+		"_id name username avatar"
+	);
+
+	return populatedComment.toObject();
 }
 
 // Story operations
@@ -417,28 +428,46 @@ export async function markMessagesAsRead(senderId: string, receiverId: string) {
 }
 
 // Notification operations
-export async function createNotification(
-	notificationData: Omit<INotification, "_id" | "createdAt" | "read">
-) {
-	await connectDB();
+export async function createNotification({
+	userId,
+	actorId,
+	type,
+	postId,
+	commentId,
+}: {
+	userId: string;
+	actorId: string;
+	type: "like" | "comment" | "follow" | "mention" | "share";
+	postId?: string;
+	commentId?: string;
+}) {
+	try {
+		await connectDB();
 
-	// Convert string IDs to ObjectIds
-	const data = {
-		...notificationData,
-		userId: new Types.ObjectId(notificationData.userId.toString()),
-		actorId: new Types.ObjectId(notificationData.actorId.toString()),
-		postId: notificationData.postId ? new Types.ObjectId(notificationData.postId.toString()) : undefined,
-		commentId: notificationData.commentId ? new Types.ObjectId(notificationData.commentId.toString()) : undefined,
-		read: false,
-	};
+		// Convert string IDs to ObjectIds
+		const data = {
+			userId: new Types.ObjectId(userId),
+			actorId: new Types.ObjectId(actorId),
+			type,
+			postId: postId ? new Types.ObjectId(postId) : undefined,
+			commentId: commentId ? new Types.ObjectId(commentId) : undefined,
+			read: false,
+		};
 
-	const newNotification = new Notification(data);
-	await newNotification.save();
+		const newNotification = new Notification(data);
+		await newNotification.save();
 
-	// Populate the actor details before returning
-	return newNotification
-		.populate("actorId", "name username avatar")
-		.then(doc => doc.toObject());
+		// Populate the actor details before returning
+		const populatedNotification = await newNotification.populate(
+			"actorId",
+			"name username avatar"
+		);
+
+		return populatedNotification.toObject();
+	} catch (error) {
+		console.error("Create notification error:", error);
+		throw error;
+	}
 }
 
 export async function getUserNotifications(

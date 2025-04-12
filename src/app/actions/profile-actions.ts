@@ -6,6 +6,7 @@ import {
 	unfollowUser,
 	updateUser,
 	getUserPosts,
+	createNotification,
 } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -36,7 +37,11 @@ export async function getProfileData(username: string) {
 	}
 }
 
-export async function handleFollow(username: string, isFollowing: boolean, formData: FormData) {
+export async function handleFollow(
+	username: string,
+	isFollowing: boolean,
+	formData: FormData
+) {
 	try {
 		const session = await getServerSession(authOptions);
 		if (!session?.user?.id) {
@@ -54,8 +59,14 @@ export async function handleFollow(username: string, isFollowing: boolean, formD
 			await followUser(session.user.id, user._id.toString());
 		}
 
-		// For server actions, we don't need to return anything
-		// The page will automatically revalidate
+		// Create notification for the target user
+		await createNotification({
+			userId: user._id.toString(),
+			type: "follow",
+			actorId: session.user.id,
+		});
+
+		return { success: true };
 	} catch (error) {
 		console.error("Error in follow action:", error);
 		throw new Error("Failed to update follow status");

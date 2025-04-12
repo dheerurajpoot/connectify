@@ -29,11 +29,11 @@ type CommentInput = {
 };
 
 type NotificationInput = {
-	userId: Types.ObjectId;
+	userId: string;
 	type: "like" | "comment" | "share";
-	actorId: Types.ObjectId;
-	postId: Types.ObjectId;
-	commentId?: Types.ObjectId;
+	actorId: string;
+	postId: string;
+	commentId?: string;
 };
 
 export async function createNewPost(formData: FormData) {
@@ -104,14 +104,14 @@ export async function likeUnlikePost(postId: string, isLiked: boolean) {
 
 			// Create notification for the post owner
 			const post = await getPostById(postId);
-			if (post && post.userId.toString() !== session.user.id) {
+			if (post && post.userId._id.toString() !== session.user.id) {
 				const notificationData: NotificationInput = {
-					userId: post.userId,
+					userId: post.userId._id.toString(),
 					type: "like",
-					actorId: new Types.ObjectId(session.user.id),
-					postId: new Types.ObjectId(postId),
+					actorId: session.user.id,
+					postId: postId,
 				};
-				await createNotification(notificationData as any);
+				await createNotification(notificationData);
 			}
 		}
 
@@ -146,22 +146,20 @@ export async function addPostComment(postId: string, content: string) {
 
 		// Create notification for the post owner
 		const post = await getPostById(postId);
-		if (post && post.userId.toString() !== session.user.id) {
+		if (post && post.userId._id.toString() !== session.user.id) {
 			const notificationData: NotificationInput = {
-				userId: post.userId,
+				userId: post.userId._id.toString(),
 				type: "comment",
-				actorId: new Types.ObjectId(session.user.id),
-				postId: new Types.ObjectId(postId),
-				commentId: comment?._id
-					? new Types.ObjectId(comment._id.toString())
-					: undefined,
+				actorId: session.user.id,
+				postId: postId,
+				commentId: comment?._id?.toString(),
 			};
-			await createNotification(notificationData as any);
+			await createNotification(notificationData);
 		}
 
-		// Convert comment to plain object and format dates/IDs
+		// Format dates and IDs
 		const plainComment = {
-			...comment.toObject(),
+			...comment,
 			_id: (comment as any)._id.toString(),
 			userId: {
 				_id: (comment as any).userId._id.toString(),
@@ -170,8 +168,8 @@ export async function addPostComment(postId: string, content: string) {
 				avatar: (comment as any).userId.avatar,
 			},
 			postId: (comment as any).postId.toString(),
-			createdAt: (comment as any).createdAt.toISOString(),
-			updatedAt: (comment as any).updatedAt.toISOString(),
+			createdAt: new Date((comment as any).createdAt).toISOString(),
+			updatedAt: new Date((comment as any).updatedAt).toISOString(),
 		};
 
 		return { success: true, comment: plainComment };
@@ -237,18 +235,18 @@ export async function getPost(id: string) {
 
 		// Convert MongoDB document to plain object
 		const plainPost = {
-			_id: post._id.toString(),
-			content: post.content,
-			media: post.media || [],
-			likes: post.likes?.map((id: any) => id.toString()) || [],
-			shares: post.shares?.map((id: any) => id.toString()) || [],
+			_id: (post as any)._id.toString(),
+			content: (post as any).content,
+			media: (post as any).media || [],
+			likes: (post as any).likes?.map((id: any) => id.toString()) || [],
+			shares: (post as any).shares?.map((id: any) => id.toString()) || [],
 			userId: {
-				_id: post.userId._id.toString(),
-				name: post.userId.name,
-				username: post.userId.username,
-				avatar: post.userId.avatar,
+				_id: (post as any).userId._id.toString(),
+				name: (post as any).userId.name,
+				username: (post as any).userId.username,
+				avatar: (post as any).userId.avatar,
 			},
-			comments: post.comments?.map((comment: any) => ({
+			comments: (post as any).comments?.map((comment: any) => ({
 				_id: comment._id.toString(),
 				content: comment.content,
 				userId: {
@@ -260,8 +258,8 @@ export async function getPost(id: string) {
 				createdAt: comment.createdAt.toISOString(),
 				updatedAt: comment.updatedAt.toISOString(),
 			})) || [],
-			createdAt: post.createdAt.toISOString(),
-			updatedAt: post.updatedAt.toISOString(),
+			createdAt: (post as any).createdAt.toISOString(),
+			updatedAt: (post as any).updatedAt.toISOString(),
 		};
 
 		return { success: true, post: plainPost };

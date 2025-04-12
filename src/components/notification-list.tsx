@@ -226,10 +226,7 @@ export function NotificationList({ type }: NotificationListProps) {
 								href={`/profile/${notification.actorId.username}`}>
 								<Avatar>
 									<AvatarImage
-										src={
-											notification.actorId.avatar ||
-											"/placeholder.svg"
-										}
+										src={notification.actorId.avatar || ""}
 										alt={notification.actorId.name}
 									/>
 									<AvatarFallback>
@@ -260,20 +257,17 @@ export function NotificationList({ type }: NotificationListProps) {
 										View post
 									</Link>
 								)}
-								{notification.commentId &&
-									notification.type === "comment" && (
-										<p className='mt-1 text-sm'>
-											View comment
-										</p>
-									)}
 							</div>
 							{notification.type === "follow" && (
-								<Button
-									variant='outline'
-									size='sm'
-									className='flex-shrink-0'>
-									Follow
-								</Button>
+								<Link
+									href={`/profile/${notification.actorId.username}`}>
+									<Button
+										variant='outline'
+										size='sm'
+										className='flex-shrink-0 cursor-pointer'>
+										Follow Back
+									</Button>
+								</Link>
 							)}
 						</div>
 					))}
