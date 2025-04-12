@@ -10,7 +10,8 @@ import {
 	IUser,
 	IPost,
 	IComment,
-	IStory,
+	IStoryDocument,
+	IStoryCreate,
 	IMessage,
 	INotification,
 } from "@/models";
@@ -298,9 +299,7 @@ export async function addComment(
 }
 
 // Story operations
-export async function createStory(
-	storyData: Omit<IStory, "_id" | "createdAt" | "expiresAt" | "viewers">
-) {
+export async function createStory(storyData: IStoryCreate) {
 	await connectDB();
 
 	// Set expiration to 24 hours from now
@@ -325,12 +324,28 @@ export async function getActiveStories(userId: string) {
 
 	const now = new Date();
 
-	return Story.find({
+	const stories = await Story.find({
 		userId: { $in: [...user.following, userId] },
 		expiresAt: { $gt: now },
 	})
 		.sort({ createdAt: -1 })
-		.populate("userId", "name username avatar");
+		.populate("userId", "name username avatar")
+		.lean();
+
+	// Transform the populated data into the expected format
+	return stories.map(story => ({
+		_id: story._id.toString(),
+		userId: story.userId._id.toString(),
+		media: story.media,
+		viewers: story.viewers?.map((v: any) => v.toString()) || [],
+		createdAt: story.createdAt.toISOString(),
+		expiresAt: story.expiresAt.toISOString(),
+		user: {
+			name: (story.userId as any).name,
+			username: (story.userId as any).username,
+			avatar: (story.userId as any).avatar
+		}
+	}));
 }
 
 export async function viewStory(storyId: string, userId: string) {

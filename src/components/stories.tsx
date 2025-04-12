@@ -28,6 +28,7 @@ interface Story {
 	media: string;
 	viewers: string[];
 	createdAt: string;
+	expiresAt: string;
 	user?: {
 		name: string;
 		username: string;
@@ -42,6 +43,7 @@ export function Stories() {
 	const [selectedStory, setSelectedStory] = useState<Story | null>(null);
 	const [storyFile, setStoryFile] = useState<File | null>(null);
 	const [isUploading, setIsUploading] = useState(false);
+	const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
 	const { toast } = useToast();
 	const { data: session, status } = useSession();
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -51,12 +53,8 @@ export function Stories() {
 			try {
 				const result = await getStories();
 				if (result.success) {
-					setStories(
-						result.stories.map((story: any) => ({
-							...story.toObject(),
-							_id: story._id.toString(),
-						}))
-					);
+					// Data is already transformed in getActiveStories
+					setStories(result.stories);
 				}
 			} catch (error) {
 				console.error("Failed to fetch stories:", error);
@@ -67,6 +65,9 @@ export function Stories() {
 
 		if (status === "authenticated") {
 			fetchStories();
+			// Refresh stories every minute
+			const interval = setInterval(fetchStories, 60000);
+			return () => clearInterval(interval);
 		}
 	}, [status]);
 
@@ -82,17 +83,37 @@ export function Stories() {
 		}
 	};
 
-	const handleStoryClick = async (story: Story) => {
+	const handleStoryClick = async (story: Story, index: number) => {
 		setSelectedStory(story);
+		setCurrentStoryIndex(index);
 
 		// Mark story as viewed
 		if (session?.user?.id) {
 			try {
 				await viewUserStory(story._id);
+				// Update local state to reflect the view
+				setStories((prevStories) =>
+					prevStories.map((s) =>
+						s._id === story._id
+							? { ...s, viewers: [...s.viewers, session.user.id] }
+							: s
+					)
+				);
 			} catch (error) {
 				console.error("Failed to mark story as viewed:", error);
 			}
 		}
+
+		// Auto-advance to next story after 5 seconds
+		const timer = setTimeout(() => {
+			if (index < stories.length - 1) {
+				handleStoryClick(stories[index + 1], index + 1);
+			} else {
+				setSelectedStory(null);
+			}
+		}, 5000);
+
+		return () => clearTimeout(timer);
 	};
 
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,7 +150,7 @@ export function Stories() {
 				if (storiesResult.success) {
 					setStories(
 						storiesResult.stories.map((story: any) => ({
-							...story.toObject(),
+							...story,
 							_id: story._id.toString(),
 						}))
 					);
@@ -256,19 +277,18 @@ export function Stories() {
 					</div>
 
 					{/* Other stories */}
-					{stories.map((story) => (
+					{stories.map((story, index) => (
 						<Dialog key={story._id}>
 							<DialogTrigger asChild>
 								<div
 									className='flex flex-col items-center gap-1 cursor-pointer'
-									onClick={() => handleStoryClick(story)}>
+									onClick={() =>
+										handleStoryClick(story, index)
+									}>
 									<div className='relative rounded-full p-[2px] bg-gradient-to-tr from-pink-500 to-orange-400'>
 										<Avatar className='h-16 w-16 border-2 border-background'>
 											<AvatarImage
-												src={
-													story.user?.avatar ||
-													"/placeholder.svg?height=48&width=48"
-												}
+												src={story.user?.avatar || ""}
 												alt={story.user?.name || "User"}
 											/>
 											<AvatarFallback>
@@ -300,8 +320,7 @@ export function Stories() {
 											<Avatar className='h-8 w-8'>
 												<AvatarImage
 													src={
-														story.user?.avatar ||
-														"/placeholder.svg?height=32&width=32"
+														story.user?.avatar || ""
 													}
 													alt={
 														story.user?.name ||
@@ -319,12 +338,6 @@ export function Stories() {
 												{story.user?.name}
 											</span>
 										</div>
-										<Button
-											variant='ghost'
-											size='icon'
-											className='text-white'>
-											<X className='h-5 w-5' />
-										</Button>
 									</div>
 								</div>
 							</DialogContent>
@@ -350,15 +363,23 @@ export function Stories() {
 					onOpenChange={(open) => !open && setSelectedStory(null)}>
 					<DialogContent className='sm:max-w-md p-0 overflow-hidden'>
 						<div className='relative aspect-[9/16] w-full'>
-							<Image
-								src={
-									selectedStory.media ||
-									"/placeholder.svg?height=800&width=450"
-								}
-								alt='Story'
-								fill
-								className='object-cover'
-							/>
+							<div className='relative w-full h-full bg-black'>
+								<Image
+									src={
+										selectedStory.media ||
+										"/placeholder.svg?height=800&width=450"
+									}
+									alt='Story'
+									fill
+									className='object-contain'
+								/>
+								<div className='absolute bottom-0 left-0 right-0 h-1 bg-gray-200'>
+									<div
+										className='h-full bg-white transition-all duration-[5000ms] ease-linear'
+										style={{ width: "100%" }}
+									/>
+								</div>
+							</div>
 							<div className='absolute inset-x-0 top-0 flex items-center justify-between p-4'>
 								<div className='flex items-center gap-2'>
 									<Avatar className='h-8 w-8'>
@@ -383,13 +404,6 @@ export function Stories() {
 										{selectedStory.user?.name}
 									</span>
 								</div>
-								<Button
-									variant='ghost'
-									size='icon'
-									className='text-white'
-									onClick={() => setSelectedStory(null)}>
-									<X className='h-5 w-5' />
-								</Button>
 							</div>
 						</div>
 					</DialogContent>

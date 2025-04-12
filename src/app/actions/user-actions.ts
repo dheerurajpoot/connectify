@@ -2,13 +2,10 @@
 
 import {
 	updateUser,
-	followUser,
-	unfollowUser,
 	getSuggestedUsers,
 	searchUsers,
 	isUserFollowing,
 } from "@/lib/db";
-import { createNotification } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
@@ -84,10 +81,13 @@ export async function checkFollowStatus(targetUsername: string) {
 			return { success: false, isFollowing: false };
 		}
 
-		const isFollowing = await isUserFollowing(session.user.id, targetUsername);
+		const isFollowing = await isUserFollowing(
+			session.user.id,
+			targetUsername
+		);
 		return { success: true, isFollowing };
 	} catch (error) {
-		console.error('Error checking follow status:', error);
+		console.error("Error checking follow status:", error);
 		return { success: false, isFollowing: false };
 	}
 }
