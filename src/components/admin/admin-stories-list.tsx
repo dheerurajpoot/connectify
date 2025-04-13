@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,23 +13,33 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { BadgeCheck, MoreHorizontal, Eye } from "lucide-react";
 import Image from "next/image";
+import { getAllStories, updateStoryStatus } from "@/app/actions/admin-actions";
+import { useToast } from "@/components/ui/use-toast";
 
-type Story = {
-	id: string;
-	user: {
-		id: string;
+interface Story {
+	_id: string;
+	userId: {
+		_id: string;
 		name: string;
 		username: string;
 		avatar: string;
 		isVerified: boolean;
 	};
-	image: string;
+	media: string;
 	createdAt: string;
 	expiresAt: string;
-	views: number;
+	viewers: string[];
 	status: "active" | "expired" | "flagged";
 	trending?: boolean;
-};
+}
+
+interface APIResponse<T> {
+	error?: string;
+	success?: boolean;
+	message?: string;
+	stories?: T[];
+	story?: T;
+}
 
 interface AdminStoriesListProps {
 	filterStatus?: "active" | "expired" | "flagged";
@@ -40,103 +50,100 @@ export function AdminStoriesList({
 	filterStatus,
 	filterTrending,
 }: AdminStoriesListProps) {
-	const [stories, setStories] = useState<Story[]>([
-		{
-			id: "1",
-			user: {
-				id: "1",
-				name: "Alex Johnson",
-				username: "alexj",
-				avatar: "/placeholder.svg?height=40&width=40",
-				isVerified: true,
-			},
-			image: "/placeholder.svg?height=200&width=100",
-			createdAt: "2023-06-15T10:30:00Z",
-			expiresAt: "2023-06-16T10:30:00Z",
-			views: 245,
-			status: "active",
-			trending: true,
-		},
-		{
-			id: "2",
-			user: {
-				id: "2",
-				name: "Emma Wilson",
-				username: "emma",
-				avatar: "/placeholder.svg?height=40&width=40",
-				isVerified: false,
-			},
-			image: "/placeholder.svg?height=200&width=100",
-			createdAt: "2023-06-14T18:45:00Z",
-			expiresAt: "2023-06-15T18:45:00Z",
-			views: 189,
-			status: "active",
-			trending: true,
-		},
-		{
-			id: "3",
-			user: {
-				id: "3",
-				name: "Michael Chen",
-				username: "michael",
-				avatar: "/placeholder.svg?height=40&width=40",
-				isVerified: true,
-			},
-			image: "/placeholder.svg?height=200&width=100",
-			createdAt: "2023-06-13T14:20:00Z",
-			expiresAt: "2023-06-14T14:20:00Z",
-			views: 312,
-			status: "flagged",
-		},
-		{
-			id: "4",
-			user: {
-				id: "4",
-				name: "Sophie Taylor",
-				username: "sophie",
-				avatar: "/placeholder.svg?height=40&width=40",
-				isVerified: false,
-			},
-			image: "/placeholder.svg?height=200&width=100",
-			createdAt: "2023-06-12T09:15:00Z",
-			expiresAt: "2023-06-13T09:15:00Z",
-			views: 156,
-			status: "expired",
-		},
-	]);
+	const { toast } = useToast();
+	const [loading, setLoading] = useState(true);
+	const [stories, setStories] = useState<Story[]>([]);
 
-	// Filter stories based on props
+	useEffect(() => {
+		const fetchStories = async () => {
+			try {
+				const result = (await getAllStories()) as APIResponse<Story>;
+				if (!result || result.error) {
+					throw new Error(result?.error || "Failed to fetch stories");
+				}
+				if (result.stories) {
+					setStories(result.stories);
+				}
+			} catch (error) {
+				console.error("Error fetching stories:", error);
+				toast({
+					title: "Error",
+					description: "Failed to fetch stories",
+					variant: "destructive",
+				});
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchStories();
+	}, [toast]);
+
+	const handleUpdateStatus = async (
+		storyId: string,
+		status: "active" | "expired" | "flagged"
+	) => {
+		try {
+			const result = (await updateStoryStatus(
+				storyId,
+				status
+			)) as APIResponse<Story>;
+
+			if (!result || result.error) {
+				throw new Error(
+					result?.error || "Failed to update story status"
+				);
+			}
+
+			setStories(
+				stories.map((story) =>
+					story._id === storyId ? { ...story, status } : story
+				)
+			);
+
+			toast({
+				title: "Success",
+				description:
+					result.message || "Story status updated successfully",
+			});
+		} catch (error) {
+			console.error("Error updating story status:", error);
+			toast({
+				title: "Error",
+				description: "Failed to update story status",
+				variant: "destructive",
+			});
+		}
+	};
+
 	const filteredStories = stories.filter((story) => {
 		if (filterStatus && story.status !== filterStatus) return false;
 		if (filterTrending && !story.trending) return false;
 		return true;
 	});
 
-	const updateStoryStatus = (
-		storyId: string,
-		status: "active" | "expired" | "flagged"
-	) => {
-		setStories(
-			stories.map((story) =>
-				story.id === storyId ? { ...story, status } : story
-			)
+	if (loading) {
+		return (
+			<div className='p-4 text-center text-sm text-muted-foreground'>
+				Loading stories...
+			</div>
 		);
-	};
+	}
 
 	return (
 		<div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
 			{filteredStories.length === 0 ? (
-				<div className='col-span-full rounded-md border p-4 text-center text-sm text-muted-foreground'>
+				<div className='col-span-full p-4 text-center text-sm text-muted-foreground'>
 					No stories found
 				</div>
 			) : (
 				filteredStories.map((story) => (
 					<div
-						key={story.id}
+						key={story._id}
 						className='rounded-md border overflow-hidden'>
 						<div className='relative aspect-[9/16] bg-muted'>
 							<Image
-								src={story.image || "/placeholder.svg"}
+								src={story.media || "/placeholder.svg"}
 								alt='Story preview'
 								fill
 								className='object-cover'
@@ -145,24 +152,24 @@ export function AdminStoriesList({
 								<div className='flex items-center gap-2'>
 									<Avatar className='h-8 w-8'>
 										<AvatarImage
-											src={story.user.avatar}
-											alt={story.user.name}
+											src={story.userId.avatar}
+											alt={story.userId.name}
 										/>
 										<AvatarFallback>
-											{story.user.name.slice(0, 2)}
+											{story.userId.name.slice(0, 2)}
 										</AvatarFallback>
 									</Avatar>
 									<div>
 										<div className='flex items-center gap-1'>
 											<span className='text-sm font-medium text-white'>
-												{story.user.name}
+												{story.userId.name}
 											</span>
-											{story.user.isVerified && (
+											{story.userId.isVerified && (
 												<BadgeCheck className='h-4 w-4 text-blue-500' />
 											)}
 										</div>
 										<div className='text-xs text-gray-300'>
-											@{story.user.username}
+											@{story.userId.username}
 										</div>
 									</div>
 								</div>
@@ -184,14 +191,8 @@ export function AdminStoriesList({
 										<DropdownMenuSeparator />
 										<DropdownMenuItem
 											onClick={() =>
-												(window.location.href = `/stories/${story.id}`)
-											}>
-											View Story
-										</DropdownMenuItem>
-										<DropdownMenuItem
-											onClick={() =>
-												updateStoryStatus(
-													story.id,
+												handleUpdateStatus(
+													story._id,
 													"active"
 												)
 											}>
@@ -199,8 +200,8 @@ export function AdminStoriesList({
 										</DropdownMenuItem>
 										<DropdownMenuItem
 											onClick={() =>
-												updateStoryStatus(
-													story.id,
+												handleUpdateStatus(
+													story._id,
 													"expired"
 												)
 											}>
@@ -208,8 +209,8 @@ export function AdminStoriesList({
 										</DropdownMenuItem>
 										<DropdownMenuItem
 											onClick={() =>
-												updateStoryStatus(
-													story.id,
+												handleUpdateStatus(
+													story._id,
 													"flagged"
 												)
 											}>
@@ -223,7 +224,7 @@ export function AdminStoriesList({
 							<div className='flex items-center justify-between'>
 								<div className='flex items-center gap-1 text-sm'>
 									<Eye className='h-4 w-4 text-muted-foreground' />
-									<span>{story.views} views</span>
+									<span>{story.viewers.length} views</span>
 								</div>
 								<span
 									className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${

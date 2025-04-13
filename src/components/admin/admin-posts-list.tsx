@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,12 +12,21 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { BadgeCheck, MoreHorizontal } from "lucide-react";
+import { getAllPosts, updatePostStatus } from "@/app/actions/admin-actions";
+import { useToast } from "@/components/ui/use-toast";
+import Link from "next/link";
 
-type Post = {
-	id: string;
+interface APIResponse<T> {
+	error?: string;
+	message?: string;
+	posts?: T[];
+}
+
+interface Post {
+	_id: string;
 	content: string;
 	user: {
-		id: string;
+		_id: string;
 		name: string;
 		username: string;
 		avatar: string;
@@ -28,7 +37,7 @@ type Post = {
 	comments: number;
 	status: "active" | "hidden" | "flagged";
 	trending?: boolean;
-};
+}
 
 interface AdminPostsListProps {
 	filterStatus?: "active" | "hidden" | "flagged";
@@ -39,70 +48,78 @@ export function AdminPostsList({
 	filterStatus,
 	filterTrending,
 }: AdminPostsListProps) {
-	const [posts, setPosts] = useState<Post[]>([
-		{
-			id: "1",
-			content: "Just finished my latest photography project! 📸",
-			user: {
-				id: "1",
-				name: "Alex Johnson",
-				username: "alexj",
-				avatar: "/placeholder.svg?height=40&width=40",
-				isVerified: true,
-			},
-			createdAt: "2023-06-15T10:30:00Z",
-			likes: 245,
-			comments: 32,
-			status: "active",
-			trending: true,
-		},
-		{
-			id: "2",
-			content: "Beautiful sunset at the beach today! 🌅",
-			user: {
-				id: "2",
-				name: "Emma Wilson",
-				username: "emma",
-				avatar: "/placeholder.svg?height=40&width=40",
-				isVerified: false,
-			},
-			createdAt: "2023-06-14T18:45:00Z",
-			likes: 189,
-			comments: 24,
-			status: "active",
-			trending: true,
-		},
-		{
-			id: "3",
-			content: "Check out my new apartment! Moving in next week. 🏠",
-			user: {
-				id: "3",
-				name: "Michael Chen",
-				username: "michael",
-				avatar: "/placeholder.svg?height=40&width=40",
-				isVerified: true,
-			},
-			createdAt: "2023-06-13T14:20:00Z",
-			likes: 312,
-			comments: 45,
-			status: "flagged",
-		},
-		{
-			id: "4",
-			content: "Just discovered this amazing coffee shop downtown! ☕",
-			user: {
-				id: "4",
-				name: "Sophie Taylor",
-				username: "sophie",
-				avatar: "/placeholder.svg?height=40&width=40",
-				isVerified: false,
-			},
-			createdAt: "2023-06-12T09:15:00Z",
-			likes: 156,
-			comments: 18,
-			status: "hidden",
-		},
-	]);
+	const [posts, setPosts] = useState<Post[]>([]);
+	const [loading, setLoading] = useState(true);
+	const { toast } = useToast();
+
+	useEffect(() => {
+		const fetchPosts = async () => {
+			try {
+				const result = (await getAllPosts()) as APIResponse<Post>;
+				if (!result || result.error) {
+					throw new Error(result?.error || "Failed to fetch posts");
+				}
+				if (result.posts) {
+					setPosts(result.posts);
+				}
+			} catch (error) {
+				console.error("Error fetching posts:", error);
+				toast({
+					title: "Error",
+					description: "Failed to load posts",
+					variant: "destructive",
+				});
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchPosts();
+	}, [toast]);
+
+	const handleUpdateStatus = async (
+		postId: string,
+		status: "active" | "hidden" | "flagged"
+	) => {
+		try {
+			const result = (await updatePostStatus(
+				postId,
+				status
+			)) as APIResponse<Post>;
+			if (!result || result.error) {
+				throw new Error(
+					result?.error || "Failed to update post status"
+				);
+			}
+
+			setPosts(
+				posts.map((post) =>
+					post._id === postId ? { ...post, status } : post
+				)
+			);
+
+			toast({
+				title: "Success",
+				description:
+					result.message || "Post status updated successfully",
+			});
+		} catch (error) {
+			console.error("Error updating post status:", error);
+			toast({
+				title: "Error",
+				description: "Failed to update post status",
+				variant: "destructive",
+			});
+		}
+	};
+
+	if (loading) {
+		return (
+			<div className='p-4 text-center text-sm text-muted-foreground'>
+				Loading posts...
+			</div>
+		);
+	}
 
 	// Filter posts based on props
 	const filteredPosts = posts.filter((post) => {
@@ -110,17 +127,6 @@ export function AdminPostsList({
 		if (filterTrending && !post.trending) return false;
 		return true;
 	});
-
-	const updatePostStatus = (
-		postId: string,
-		status: "active" | "hidden" | "flagged"
-	) => {
-		setPosts(
-			posts.map((post) =>
-				post.id === postId ? { ...post, status } : post
-			)
-		);
-	};
 
 	return (
 		<div className='space-y-4'>
@@ -130,29 +136,29 @@ export function AdminPostsList({
 				</div>
 			) : (
 				filteredPosts.map((post) => (
-					<div key={post.id} className='rounded-md border p-4'>
+					<div key={post._id} className='rounded-md border p-4'>
 						<div className='flex items-center justify-between'>
 							<div className='flex items-center gap-3'>
 								<Avatar>
 									<AvatarImage
-										src={post.user.avatar}
-										alt={post.user.name}
+										src={post.user?.avatar}
+										alt={post.user?.name}
 									/>
 									<AvatarFallback>
-										{post.user.name.slice(0, 2)}
+										{post.user?.name.slice(0, 2)}
 									</AvatarFallback>
 								</Avatar>
 								<div>
 									<div className='flex items-center gap-1'>
 										<span className='font-medium'>
-											{post.user.name}
+											{post.user?.name}
 										</span>
-										{post.user.isVerified && (
+										{post.user?.isVerified && (
 											<BadgeCheck className='h-4 w-4 text-blue-500' />
 										)}
 									</div>
 									<div className='text-xs text-muted-foreground'>
-										@{post.user.username} •{" "}
+										@{post.user?.username} •{" "}
 										{new Date(
 											post.createdAt
 										).toLocaleString()}
@@ -185,16 +191,15 @@ export function AdminPostsList({
 											Actions
 										</DropdownMenuLabel>
 										<DropdownMenuSeparator />
-										<DropdownMenuItem
-											onClick={() =>
-												(window.location.href = `/post/${post.id}`)
-											}>
-											View Post
+										<DropdownMenuItem>
+											<Link href={`/post/${post._id}`}>
+												View Post
+											</Link>
 										</DropdownMenuItem>
 										<DropdownMenuItem
 											onClick={() =>
-												updatePostStatus(
-													post.id,
+												handleUpdateStatus(
+													post._id,
 													"active"
 												)
 											}>
@@ -202,8 +207,8 @@ export function AdminPostsList({
 										</DropdownMenuItem>
 										<DropdownMenuItem
 											onClick={() =>
-												updatePostStatus(
-													post.id,
+												handleUpdateStatus(
+													post._id,
 													"hidden"
 												)
 											}>
@@ -211,8 +216,8 @@ export function AdminPostsList({
 										</DropdownMenuItem>
 										<DropdownMenuItem
 											onClick={() =>
-												updatePostStatus(
-													post.id,
+												handleUpdateStatus(
+													post._id,
 													"flagged"
 												)
 											}>

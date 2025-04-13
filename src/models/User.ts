@@ -11,6 +11,7 @@ export interface IUser extends Document {
 	location?: string;
 	website?: string;
 	isVerified?: Boolean;
+	role: 'user' | 'admin';
 	followers: mongoose.Types.ObjectId[];
 	following: mongoose.Types.ObjectId[];
 	posts: mongoose.Types.ObjectId[];
@@ -30,6 +31,7 @@ const UserSchema = new Schema<IUser>(
 		location: { type: String },
 		website: { type: String },
 		isVerified: { type: Boolean, default: false },
+		role: { type: String, enum: ['user', 'admin'], default: 'user' },
 		followers: [{ type: Schema.Types.ObjectId, ref: "User" }],
 		following: [{ type: Schema.Types.ObjectId, ref: "User" }],
 		posts: [{ type: Schema.Types.ObjectId, ref: "Post" }],

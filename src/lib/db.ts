@@ -567,3 +567,189 @@ export async function isUserFollowing(followerId: string, targetUsername: string
 		return false;
 	}
 }
+
+// Admin operations
+export async function getAllUsers() {
+	await connectDB();
+	const users = await User.find()
+		.select('-password')
+		.sort({ createdAt: -1 })
+		.lean();
+
+	return users.map(user => ({
+		...user,
+		_id: user._id.toString(),
+		createdAt: user.createdAt.toISOString(),
+		updatedAt: user.updatedAt.toISOString(),
+	}));
+}
+
+export async function getSystemStats() {
+	await connectDB();
+
+	const userCount = await User.countDocuments();
+	const postCount = await Post.countDocuments();
+	const commentCount = await Comment.countDocuments();
+	const storyCount = await Story.countDocuments();
+
+	const lastDayStats = {
+		newUsers: await User.countDocuments({
+			createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+		}),
+		newPosts: await Post.countDocuments({
+			createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+		}),
+	};
+
+	return {
+		totalStats: {
+			users: userCount,
+			posts: postCount,
+			comments: commentCount,
+			stories: storyCount,
+		},
+		lastDayStats,
+	};
+}
+
+export async function getRecentUsers(limit = 10) {
+	await connectDB();
+	const users = await User.find()
+		.sort({ createdAt: -1 })
+		.limit(limit)
+		.select('-password')
+		.lean();
+
+	return users.map(user => ({
+		...user,
+		_id: user._id.toString(),
+		createdAt: user.createdAt.toISOString(),
+		updatedAt: user.updatedAt.toISOString(),
+		status: user.isVerified ? 'active' : 'pending'
+	}));
+}
+
+export async function getRecentPosts(limit = 10) {
+	await connectDB();
+	return Post.find()
+		.sort({ createdAt: -1 })
+		.limit(limit)
+		.populate('userId', 'name username avatar')
+		.lean();
+}
+
+export async function getAllStories() {
+	await connectDB();
+	const stories = await Story.find()
+		.sort({ createdAt: -1 })
+		.populate('userId', 'name username avatar isVerified')
+		.lean();
+
+	return stories.map(story => ({
+		...story,
+		_id: story._id.toString(),
+		userId: {
+			...story.userId,
+			_id: story.userId._id.toString()
+		},
+		createdAt: story.createdAt.toISOString(),
+		expiresAt: story.expiresAt.toISOString(),
+		trending: story.viewers?.length > 100
+	}));
+}
+
+export async function updateStoryStatus(storyId: string, status: 'active' | 'expired' | 'flagged') {
+	await connectDB();
+	const story = await Story.findByIdAndUpdate(
+		storyId,
+		{ status },
+		{ new: true }
+	).populate('userId', 'name username avatar isVerified').lean();
+
+	if (!story) throw new Error('Story not found');
+
+	return {
+		...story,
+		_id: story._id.toString(),
+		userId: {
+			...story.userId,
+			_id: story.userId._id.toString()
+		},
+		createdAt: story.createdAt.toISOString(),
+		expiresAt: story.expiresAt.toISOString(),
+		trending: story.viewers?.length > 100
+	};
+}
+
+export async function toggleUserVerification(userId: string) {
+	await connectDB();
+	const user = await User.findById(userId);
+	if (!user) throw new Error('User not found');
+
+	user.isVerified = !user.isVerified;
+	await user.save();
+	return user;
+}
+
+export async function updateUserRole(userId: string, role: 'user' | 'admin') {
+	await connectDB();
+	return User.findByIdAndUpdate(
+		userId,
+		{ role },
+		{ new: true }
+	).select('-password');
+}
+
+export async function deleteUserAndContent(userId: string) {
+	await connectDB();
+
+	// Start a session for transaction
+	const session = await mongoose.startSession();
+	session.startTransaction();
+
+	try {
+		// Delete user's posts and their associated comments
+		const posts = await Post.find({ userId });
+		for (const post of posts) {
+			await Comment.deleteMany({ postId: post._id });
+		}
+		await Post.deleteMany({ userId });
+
+		// Delete user's stories
+		await Story.deleteMany({ userId });
+
+		// Delete user's comments on other posts
+		await Comment.deleteMany({ userId });
+
+		// Delete user's notifications
+		await Notification.deleteMany({
+			$or: [{ userId }, { actorId: userId }],
+		});
+
+		// Delete user's messages
+		await Message.deleteMany({
+			$or: [{ senderId: userId }, { receiverId: userId }],
+		});
+
+		// Remove user from followers/following lists
+		await User.updateMany(
+			{ $or: [{ followers: userId }, { following: userId }] },
+			{ $pull: { followers: userId, following: userId } }
+		);
+
+		// Finally, delete the user
+		await User.findByIdAndDelete(userId);
+
+		// Commit the transaction
+		await session.commitTransaction();
+	} catch (error) {
+		// If an error occurred, abort the transaction
+		await session.abortTransaction();
+		throw error;
+	} finally {
+		// End the session
+		session.endSession();
+	}
+
+	return { success: true };
+}

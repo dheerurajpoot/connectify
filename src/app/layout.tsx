@@ -91,6 +91,7 @@ export default function RootLayout({
 						</div>
 					</ThemeProvider>
 				</Providers>
+				<Toaster position='bottom-right' duration={5000} />
 			</body>
 		</html>
 	);
@@ -98,3 +99,4 @@ export default function RootLayout({
 
 import "./globals.css";
 import { MobileHeader } from "@/components/mobile-header";
+import { Toaster } from "sonner";

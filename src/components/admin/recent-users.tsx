@@ -27,7 +27,7 @@ type User = {
 	email: string;
 	avatar: string;
 	isVerified: boolean;
-	joinDate: string;
+	createdAt: string;
 	status: "active" | "suspended" | "pending";
 };
 
@@ -40,7 +40,7 @@ export function RecentUsers() {
 			email: "alex@example.com",
 			avatar: "/placeholder.svg?height=40&width=40",
 			isVerified: true,
-			joinDate: "2023-01-15",
+			createdAt: "2023-01-15",
 			status: "active",
 		},
 		{
@@ -50,7 +50,7 @@ export function RecentUsers() {
 			email: "emma@example.com",
 			avatar: "/placeholder.svg?height=40&width=40",
 			isVerified: false,
-			joinDate: "2023-02-20",
+			createdAt: "2023-02-20",
 			status: "active",
 		},
 		{
@@ -60,7 +60,7 @@ export function RecentUsers() {
 			email: "michael@example.com",
 			avatar: "/placeholder.svg?height=40&width=40",
 			isVerified: true,
-			joinDate: "2023-03-10",
+			createdAt: "2023-03-10",
 			status: "active",
 		},
 		{
@@ -70,7 +70,7 @@ export function RecentUsers() {
 			email: "sophie@example.com",
 			avatar: "/placeholder.svg?height=40&width=40",
 			isVerified: false,
-			joinDate: "2023-04-05",
+			createdAt: "2023-04-05",
 			status: "pending",
 		},
 		{
@@ -80,7 +80,7 @@ export function RecentUsers() {
 			email: "james@example.com",
 			avatar: "/placeholder.svg?height=40&width=40",
 			isVerified: false,
-			joinDate: "2023-05-12",
+			createdAt: "2023-05-12",
 			status: "suspended",
 		},
 	]);
@@ -117,7 +117,7 @@ export function RecentUsers() {
 					<div className='grid grid-cols-5 text-sm font-medium text-muted-foreground'>
 						<div>User</div>
 						<div>Username</div>
-						<div>Join Date</div>
+						<div>Created At</div>
 						<div>Status</div>
 						<div className='text-right'>Actions</div>
 					</div>
@@ -148,7 +148,7 @@ export function RecentUsers() {
 								<div>@{user.username}</div>
 								<div>
 									{new Date(
-										user.joinDate
+										user.createdAt
 									).toLocaleDateString()}
 								</div>
 								<div>
