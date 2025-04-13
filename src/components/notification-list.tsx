@@ -249,7 +249,7 @@ export function NotificationList({ type }: NotificationListProps) {
 										className='font-medium hover:underline flex items-center gap-1'>
 										{notification.actorId.name}
 										{notification.actorId.isVerified && (
-											<BadgeCheck className='h-4 w-4 text-blue-500' />
+											<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 										)}
 									</Link>
 									<span className='text-sm'>

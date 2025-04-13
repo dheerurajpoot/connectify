@@ -117,7 +117,7 @@ export function ProfileFollowers({
 										<p className='font-medium flex items-center gap-1'>
 											{user.name}
 											{user.isVerified && (
-												<BadgeCheck className='h-4 w-4 text-blue-500' />
+												<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 											)}
 										</p>
 										<p className='text-xs text-muted-foreground'>
@@ -171,7 +171,7 @@ export function ProfileFollowers({
 										<p className='font-medium flex items-center gap-1'>
 											{user.name}
 											{user.isVerified && (
-												<BadgeCheck className='h-4 w-4 text-blue-500' />
+												<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 											)}
 										</p>
 										<p className='text-xs text-muted-foreground'>

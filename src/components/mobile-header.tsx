@@ -95,7 +95,9 @@ export function MobileHeader() {
 							<span className='sr-only'>Menu</span>
 						</Button>
 					</SheetTrigger>
-					<SheetContent side='right' className='flex flex-col p-8'>
+					<SheetContent
+						side='right'
+						className='flex flex-col p-8 z-999'>
 						<div className='flex items-center gap-3 border-b pb-4'>
 							<Avatar>
 								<AvatarImage
@@ -111,7 +113,7 @@ export function MobileHeader() {
 								<p className='text-sm font-medium'>
 									{session?.user?.name}
 									{session?.user?.isVerified && (
-										<BadgeCheck className='h-4 w-4 text-blue-500' />
+										<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 									)}
 								</p>
 								<p className='text-xs text-muted-foreground'>

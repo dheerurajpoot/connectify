@@ -351,7 +351,7 @@ export function MessageContent() {
 	return (
 		<div
 			className={cn(
-				"flex-1 flex flex-col h-[calc(100vh-200px)] pt-12 pb-16 message-content",
+				"flex-1 flex flex-col h-full pt-12 md:pt-0 message-content",
 				isMobile && !partnerId ? "hidden md:flex" : "flex"
 			)}>
 			{/* Header */}
@@ -392,7 +392,7 @@ export function MessageContent() {
 						<p className='font-semibold flex items-center gap-1'>
 							{partner?.name}
 							{partner?.isVerified && (
-								<BadgeCheck className='h-4 w-4 text-blue-500' />
+								<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 							)}
 						</p>
 						<div className='flex items-center gap-2'>
@@ -420,7 +420,7 @@ export function MessageContent() {
 			{/* Messages */}
 			<div
 				ref={messagesContainerRef}
-				className='flex-1 px-4 flex flex-col justify-start'>
+				className='flex-1 px-4 flex overflow-auto overflow-y-hidden flex-col justify-start'>
 				{loading ? (
 					<div className='flex items-center justify-center h-full'>
 						<Loader2 className='w-6 h-6 animate-spin' />
@@ -433,7 +433,7 @@ export function MessageContent() {
 					</div>
 				) : (
 					<div
-						className='space-y-4 flex flex-col overflow-scroll h-[calc(100vh-260px)]'
+						className='space-y-4 px-4 flex flex-col h-full overflow-x-scroll pt-2'
 						ref={messagesEndRef}>
 						{messages.map((message) => (
 							<div
@@ -495,7 +495,7 @@ export function MessageContent() {
 				)}
 			</div>
 
-			<div className='border-t p-4'>
+			<div className='border-t p-4 fixed bottom-0 z-996 dark:bg-black bg-white w-full'>
 				<div className='flex items-center gap-2'>
 					<Button
 						variant='ghost'

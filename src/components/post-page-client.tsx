@@ -199,7 +199,7 @@ export function PostPageClient({ post }: PostPageClientProps) {
 									className='font-semibold hover:underline flex items-center gap-1'>
 									{post.userId.name}
 									{post.userId.isVerified && (
-										<BadgeCheck className='h-4 w-4 text-blue-500' />
+										<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 									)}
 								</Link>
 							</div>

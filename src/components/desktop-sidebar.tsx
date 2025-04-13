@@ -82,7 +82,6 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 		}
 	};
 
-	console.log(session);
 	return (
 		<div
 			className={cn(
@@ -137,7 +136,7 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 						<p className='text-sm font-medium flex items-center gap-1'>
 							{session?.user?.name || "User"}
 							{session?.user?.isVerified && (
-								<BadgeCheck className='h-4 w-4 text-blue-500' />
+								<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 							)}
 						</p>
 						<p className='text-xs text-muted-foreground'>
@@ -174,7 +173,7 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 									<p className='text-sm font-medium flex items-center gap-1'>
 										{session?.user?.name}
 										{session?.user?.isVerified && (
-											<BadgeCheck className='h-4 w-4 text-blue-500' />
+											<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 										)}
 									</p>
 									<p className='text-xs text-muted-foreground'>
@@ -207,6 +206,12 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 										href='/settings'
 										className='flex items-center gap-2 rounded-md px-2 py-1 hover:bg-accent'>
 										Settings
+									</Link>
+									<Link
+										href='/verification'
+										className='flex items-center gap-2 rounded-md px-2 py-1 hover:bg-accent'>
+										Get Verified
+										<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 									</Link>
 									<Link
 										href='/help'

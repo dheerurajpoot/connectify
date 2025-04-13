@@ -164,7 +164,7 @@ export function AdminStoriesList({
 											<span className='text-sm font-medium text-white flex items-center gap-1'>
 												{story.userId.name}
 												{story.userId.isVerified && (
-													<BadgeCheck className='h-4 w-4 text-blue-500' />
+													<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 												)}
 											</span>
 										</div>

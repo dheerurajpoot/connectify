@@ -95,7 +95,7 @@ export function PostPreviewDialog({
 							<div className='font-semibold'>
 								{post.userId.name}
 								{post.userId.isVerified && (
-									<BadgeCheck className='h-4 w-4 text-blue-500' />
+									<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 								)}
 							</div>
 							<p className='text-xs text-muted-foreground'>

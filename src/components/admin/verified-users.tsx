@@ -101,7 +101,7 @@ export function VerifiedUsers() {
 												<span className='font-medium'>
 													{user.name}
 												</span>
-												<BadgeCheck className='h-4 w-4 text-blue-500' />
+												<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 											</div>
 											<div className='text-sm text-muted-foreground'>
 												@{user.username}

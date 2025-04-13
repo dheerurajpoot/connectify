@@ -89,7 +89,7 @@ export function AdminNotificationsList({
 							<span className='text-sm font-medium flex items-center gap-1'>
 								{notification.actorId.name}
 								{notification.actorId.isVerified && (
-									<BadgeCheck className='h-4 w-4 text-blue-500' />
+									<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 								)}
 							</span>
 							<span className='text-xs text-muted-foreground'>

@@ -312,7 +312,7 @@ export function Stories() {
 									<span className='text-xs text-muted-foreground'>
 										{story.user?.name || "User"}
 										{story.user?.isVerified && (
-											<BadgeCheck className='h-4 w-4 text-blue-500' />
+											<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 										)}
 									</span>
 								</div>
@@ -351,7 +351,7 @@ export function Stories() {
 											<span className='text-sm font-medium text-white'>
 												{story.user?.name}
 												{story.user?.isVerified && (
-													<BadgeCheck className='h-4 w-4 text-blue-500' />
+													<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 												)}
 											</span>
 										</div>
@@ -420,7 +420,7 @@ export function Stories() {
 									<span className='text-sm font-medium text-white'>
 										{selectedStory.user?.name}
 										{selectedStory.user?.isVerified && (
-											<BadgeCheck className='h-4 w-4 text-blue-500' />
+											<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 										)}
 									</span>
 								</div>

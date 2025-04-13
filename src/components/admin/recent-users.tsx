@@ -141,7 +141,7 @@ export function RecentUsers() {
 											{user.name}
 										</span>
 										{user.isVerified && (
-											<BadgeCheck className='h-4 w-4 text-blue-500' />
+											<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 										)}
 									</div>
 								</div>

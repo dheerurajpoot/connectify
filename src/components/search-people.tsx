@@ -33,12 +33,12 @@ export function SearchPeople() {
 				const result = await searchPeople(query);
 				if (result.success && result.users) {
 					// Transform the MongoDB data to match the User interface
-					const transformedUsers = result.users.map(user => ({
+					const transformedUsers = result.users.map((user) => ({
 						_id: user._id,
 						name: user.name,
 						username: user.username,
 						avatar: user.avatar,
-						isVerified: user.isVerified ? true : false
+						isVerified: user.isVerified ? true : false,
 					}));
 					setUsers(transformedUsers);
 				} else {
@@ -94,7 +94,7 @@ export function SearchPeople() {
 										<p className='font-medium'>
 											{user.name}
 											{user.isVerified && (
-												<BadgeCheck className='h-4 w-4 text-blue-500' />
+												<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 											)}
 										</p>
 										<p className='text-sm text-muted-foreground'>

@@ -161,9 +161,13 @@ export function AdminUsersList({
 			}
 
 			toast.success("User updated successfully");
-			setUsers(users.map(user => 
-				user._id === editingUser._id ? { ...user, ...editForm } : user
-			));
+			setUsers(
+				users.map((user) =>
+					user._id === editingUser._id
+						? { ...user, ...editForm }
+						: user
+				)
+			);
 			setIsEditDialogOpen(false);
 		} catch (error) {
 			console.error("Error updating user:", error);
@@ -195,7 +199,6 @@ export function AdminUsersList({
 	}
 
 	// Filter users based on props
-	
 
 	return (
 		<div className='space-y-4'>
@@ -233,7 +236,7 @@ export function AdminUsersList({
 											{user.name}
 										</span>
 										{user.isVerified && (
-											<BadgeCheck className='h-4 w-4 text-blue-500' />
+											<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />
 										)}
 									</div>
 								</div>
@@ -273,26 +276,39 @@ export function AdminUsersList({
 											</DropdownMenuLabel>
 											<DropdownMenuSeparator />
 											<DropdownMenuItem
-												onClick={() => toggleVerification(user._id)}>
+												onClick={() =>
+													toggleVerification(user._id)
+												}>
 												{user.isVerified
 													? "Remove Verification"
 													: "Verify User"}
 											</DropdownMenuItem>
 											<DropdownMenuItem
-												onClick={() => handleEditUser(user)}>
+												onClick={() =>
+													handleEditUser(user)
+												}>
 												Edit User
 											</DropdownMenuItem>
 											<DropdownMenuSeparator />
 											<DropdownMenuItem
-												onClick={() => updateRole(user._id, "user")}>
+												onClick={() =>
+													updateRole(user._id, "user")
+												}>
 												Set as User
 											</DropdownMenuItem>
 											<DropdownMenuItem
-												onClick={() => updateRole(user._id, "admin")}>
+												onClick={() =>
+													updateRole(
+														user._id,
+														"admin"
+													)
+												}>
 												Set as Admin
 											</DropdownMenuItem>
 											<DropdownMenuItem
-												onClick={() => deleteUser(user._id)}>
+												onClick={() =>
+													deleteUser(user._id)
+												}>
 												Delete User
 											</DropdownMenuItem>
 										</DropdownMenuContent>
@@ -310,70 +326,117 @@ export function AdminUsersList({
 					<DialogHeader>
 						<DialogTitle>Edit User Profile</DialogTitle>
 						<DialogDescription>
-							Make changes to the user's profile here. Click save when you're done.
+							Make changes to the user's profile here. Click save
+							when you're done.
 						</DialogDescription>
 					</DialogHeader>
 
-					<div className="grid gap-4 py-4">
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="name" className="text-right">Name</Label>
+					<div className='grid gap-4 py-4'>
+						<div className='grid grid-cols-4 items-center gap-4'>
+							<Label htmlFor='name' className='text-right'>
+								Name
+							</Label>
 							<Input
-								id="name"
+								id='name'
 								value={editForm.name}
-								className="col-span-3"
-								onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+								className='col-span-3'
+								onChange={(e) =>
+									setEditForm({
+										...editForm,
+										name: e.target.value,
+									})
+								}
 							/>
 						</div>
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="username" className="text-right">Username</Label>
+						<div className='grid grid-cols-4 items-center gap-4'>
+							<Label htmlFor='username' className='text-right'>
+								Username
+							</Label>
 							<Input
-								id="username"
+								id='username'
 								value={editForm.username}
-								className="col-span-3"
-								onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+								className='col-span-3'
+								onChange={(e) =>
+									setEditForm({
+										...editForm,
+										username: e.target.value,
+									})
+								}
 							/>
 						</div>
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="email" className="text-right">Email</Label>
+						<div className='grid grid-cols-4 items-center gap-4'>
+							<Label htmlFor='email' className='text-right'>
+								Email
+							</Label>
 							<Input
-								id="email"
-								type="email"
+								id='email'
+								type='email'
 								value={editForm.email}
-								className="col-span-3"
-								onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+								className='col-span-3'
+								onChange={(e) =>
+									setEditForm({
+										...editForm,
+										email: e.target.value,
+									})
+								}
 							/>
 						</div>
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="bio" className="text-right">Bio</Label>
+						<div className='grid grid-cols-4 items-center gap-4'>
+							<Label htmlFor='bio' className='text-right'>
+								Bio
+							</Label>
 							<Input
-								id="bio"
+								id='bio'
 								value={editForm.bio}
-								className="col-span-3"
-								onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+								className='col-span-3'
+								onChange={(e) =>
+									setEditForm({
+										...editForm,
+										bio: e.target.value,
+									})
+								}
 							/>
 						</div>
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="location" className="text-right">Location</Label>
+						<div className='grid grid-cols-4 items-center gap-4'>
+							<Label htmlFor='location' className='text-right'>
+								Location
+							</Label>
 							<Input
-								id="location"
+								id='location'
 								value={editForm.location}
-								className="col-span-3"
-								onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+								className='col-span-3'
+								onChange={(e) =>
+									setEditForm({
+										...editForm,
+										location: e.target.value,
+									})
+								}
 							/>
 						</div>
-						<div className="grid grid-cols-4 items-center gap-4">
-							<Label htmlFor="website" className="text-right">Website</Label>
+						<div className='grid grid-cols-4 items-center gap-4'>
+							<Label htmlFor='website' className='text-right'>
+								Website
+							</Label>
 							<Input
-								id="website"
+								id='website'
 								value={editForm.website}
-								className="col-span-3"
-								onChange={(e) => setEditForm({ ...editForm, website: e.target.value })}
+								className='col-span-3'
+								onChange={(e) =>
+									setEditForm({
+										...editForm,
+										website: e.target.value,
+									})
+								}
 							/>
 						</div>
 					</div>
 
 					<DialogFooter>
-						<Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+						<Button
+							variant='outline'
+							onClick={() => setIsEditDialogOpen(false)}>
+							Cancel
+						</Button>
 						<Button onClick={handleUpdateUser}>Save changes</Button>
 					</DialogFooter>
 				</DialogContent>
