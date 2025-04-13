@@ -3,7 +3,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Search } from "lucide-react";
+import { BadgeCheck, Search } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -20,6 +20,7 @@ interface Conversation {
 		name: string;
 		username: string;
 		avatar: string;
+		isVerified: boolean;
 	};
 	lastMessage: {
 		content: string;
@@ -33,7 +34,13 @@ interface SearchUser {
 	_id: string;
 	name: string;
 	username: string;
+	email: string;
 	avatar?: string;
+	bio?: string;
+	location?: string;
+	website?: string;
+	isVerified: boolean;
+	__v?: number;
 }
 
 export function MessageList() {
@@ -98,7 +105,12 @@ export function MessageList() {
 						variant: "destructive",
 					});
 				} else if (result.success) {
-					setSearchResults(result.users);
+					setSearchResults(
+						result.users.map((user: any) => ({
+							...user,
+							isVerified: Boolean(user.isVerified),
+						}))
+					);
 				}
 			} catch (error) {
 				console.error("Search error:", error);
@@ -185,7 +197,12 @@ export function MessageList() {
 								</AvatarFallback>
 							</Avatar>
 							<div className='flex-1'>
-								<p className='font-medium'>{user.name}</p>
+								<p className='font-medium flex items-center gap-1'>
+									{user.name}
+									{user.isVerified && (
+										<BadgeCheck className='h-4 w-4 text-blue-500' />
+									)}
+								</p>
 								<p className='text-sm text-muted-foreground'>
 									@{user.username}
 								</p>
@@ -256,9 +273,14 @@ export function MessageList() {
 										className={cn(
 											"font-medium",
 											conversation.unreadCount > 0 &&
-												"font-semibold"
+												"font-semibold",
+											conversation.user.isVerified &&
+												"flex items-center gap-1"
 										)}>
 										{conversation.user.name}
+										{conversation.user.isVerified && (
+											<BadgeCheck className='h-4 w-4 text-blue-500' />
+										)}
 									</p>
 									<p className='text-xs text-muted-foreground'>
 										{new Date(

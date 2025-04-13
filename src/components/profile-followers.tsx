@@ -8,12 +8,14 @@ import { useToast } from "@/components/ui/use-toast";
 import Link from "next/link";
 import { handleFollow } from "@/app/actions/profile-actions";
 import { useState } from "react";
+import { BadgeCheck } from "lucide-react";
 
 interface User {
 	_id: string;
 	name: string;
 	username: string;
 	avatar?: string;
+	isVerified: boolean;
 }
 
 interface ProfileFollowersProps {
@@ -112,8 +114,11 @@ export function ProfileFollowers({
 										</AvatarFallback>
 									</Avatar>
 									<div>
-										<p className='font-medium'>
+										<p className='font-medium flex items-center gap-1'>
 											{user.name}
+											{user.isVerified && (
+												<BadgeCheck className='h-4 w-4 text-blue-500' />
+											)}
 										</p>
 										<p className='text-xs text-muted-foreground'>
 											@{user.username}
@@ -163,8 +168,11 @@ export function ProfileFollowers({
 										</AvatarFallback>
 									</Avatar>
 									<div>
-										<p className='font-medium'>
+										<p className='font-medium flex items-center gap-1'>
 											{user.name}
+											{user.isVerified && (
+												<BadgeCheck className='h-4 w-4 text-blue-500' />
+											)}
 										</p>
 										<p className='text-xs text-muted-foreground'>
 											@{user.username}

@@ -43,6 +43,7 @@ export async function getProfileData(username: string) {
 					name: f.name,
 					username: f.username,
 					avatar: f.avatar,
+					isVerified: Boolean(f.isVerified),
 				})) || [],
 			following:
 				userObj.following?.map((f: any) => ({
@@ -50,6 +51,7 @@ export async function getProfileData(username: string) {
 					name: f.name,
 					username: f.username,
 					avatar: f.avatar,
+					isVerified: Boolean(f.isVerified),
 				})) || [],
 		};
 
@@ -114,8 +116,6 @@ export async function updateProfile(formData: FormData) {
 		const mediaFile = formData.get("avatar") as File;
 		const buffer = Buffer.from(await mediaFile.arrayBuffer());
 		const mediaUrl = await uploadImage(buffer);
-
-		console.log(mediaUrl);
 
 		const name = formData.get("name") as string;
 		const username = formData.get("username") as string;

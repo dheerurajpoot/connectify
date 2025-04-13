@@ -13,6 +13,7 @@ import {
 	PlusSquare,
 	Menu,
 	LogOut,
+	BadgeCheck,
 } from "lucide-react";
 import {
 	Sheet,
@@ -80,6 +81,8 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 			console.log("Sign out error", error);
 		}
 	};
+
+	console.log(session);
 	return (
 		<div
 			className={cn(
@@ -131,13 +134,16 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 						</AvatarFallback>
 					</Avatar>
 					<div className='flex-1'>
-						<p className='text-sm font-medium'>
+						<p className='text-sm font-medium flex items-center gap-1'>
 							{session?.user?.name || "User"}
+							{session?.user?.isVerified && (
+								<BadgeCheck className='h-4 w-4 text-blue-500' />
+							)}
 						</p>
 						<p className='text-xs text-muted-foreground'>
 							@
-							{session?.user?.username?.substring(0, 15) +
-								"..." || "username"}
+							{session?.user?.username?.substring(0, 15) + ".." ||
+								"username"}
 						</p>
 					</div>
 					<Sheet>
@@ -165,8 +171,11 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 									</AvatarFallback>
 								</Avatar>
 								<div className='flex-1'>
-									<p className='text-sm font-medium'>
+									<p className='text-sm font-medium flex items-center gap-1'>
 										{session?.user?.name}
+										{session?.user?.isVerified && (
+											<BadgeCheck className='h-4 w-4 text-blue-500' />
+										)}
 									</p>
 									<p className='text-xs text-muted-foreground'>
 										@{session?.user.username}

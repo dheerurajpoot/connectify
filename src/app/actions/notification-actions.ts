@@ -29,10 +29,12 @@ export async function getNotifications(page = 1) {
 				name: notification.actorId.name,
 				username: notification.actorId.username,
 				avatar: notification.actorId.avatar,
+				isVerified: notification.actorId.isVerified,
 			},
 			postId: notification.postId?._id.toString(),
 			commentId: notification.commentId?._id.toString(),
 			read: notification.read,
+			message: notification.message,
 			createdAt:
 				notification.createdAt instanceof Date
 					? notification.createdAt.toISOString()

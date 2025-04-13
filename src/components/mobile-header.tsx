@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, Menu, LogOut } from "lucide-react";
+import { Bell, Menu, LogOut, BadgeCheck } from "lucide-react";
 import {
 	Sheet,
 	SheetContent,
@@ -99,7 +99,7 @@ export function MobileHeader() {
 						<div className='flex items-center gap-3 border-b pb-4'>
 							<Avatar>
 								<AvatarImage
-									src={session?.user?.image || ""}
+									src={session?.user?.avatar || ""}
 									alt='User'
 									className='object-cover'
 								/>
@@ -110,6 +110,9 @@ export function MobileHeader() {
 							<div className='flex-1'>
 								<p className='text-sm font-medium'>
 									{session?.user?.name}
+									{session?.user?.isVerified && (
+										<BadgeCheck className='h-4 w-4 text-blue-500' />
+									)}
 								</p>
 								<p className='text-xs text-muted-foreground'>
 									@{session?.user.username}

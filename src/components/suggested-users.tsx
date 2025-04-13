@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FollowButton } from "@/components/follow-button";
 import Link from "next/link";
+import { BadgeCheck } from "lucide-react";
 
 export async function SuggestedUsers() {
 	const { success, users } = await getSuggested();
@@ -39,6 +40,9 @@ export async function SuggestedUsers() {
 									href={`/profile/${user.username}`}
 									className='text-sm font-medium hover:underline'>
 									{user.name}
+									{user.isVerified && (
+										<BadgeCheck className='h-4 w-4 text-blue-500' />
+									)}
 								</Link>
 								<p className='text-xs text-muted-foreground'>
 									@{user.username}

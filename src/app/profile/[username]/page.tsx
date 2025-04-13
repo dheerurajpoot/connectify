@@ -60,7 +60,6 @@ export default async function ProfilePage({ params }: Props) {
 	if (error || !user) {
 		notFound();
 	}
-	const isVerified = username === "dheerurajpoot";
 
 	return (
 		<div className='container px-4 mt-12 md:mt-0 py-6'>
@@ -79,7 +78,7 @@ export default async function ProfilePage({ params }: Props) {
 					<div className='text-center sm:text-left'>
 						<h1 className='text-2xl font-bold flex items-center gap-2'>
 							{user.name}
-							{isVerified && (
+							{user.isVerified && (
 								<BadgeCheck className='h-5 w-5 text-blue-500' />
 							)}
 						</h1>

@@ -150,12 +150,12 @@ export function AdminPostsList({
 								</Avatar>
 								<div>
 									<div className='flex items-center gap-1'>
-										<span className='font-medium'>
+										<span className='font-medium flex items-center gap-1'>
 											{post.user?.name}
+											{post.user?.isVerified && (
+												<BadgeCheck className='h-4 w-4 text-blue-500' />
+											)}
 										</span>
-										{post.user?.isVerified && (
-											<BadgeCheck className='h-4 w-4 text-blue-500' />
-										)}
 									</div>
 									<div className='text-xs text-muted-foreground'>
 										@{post.user?.username} •{" "}

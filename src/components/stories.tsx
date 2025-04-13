@@ -5,7 +5,14 @@ import type React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useRef, useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Plus, X, ImagePlus } from "lucide-react";
+import {
+	ChevronLeft,
+	ChevronRight,
+	Plus,
+	X,
+	ImagePlus,
+	BadgeCheck,
+} from "lucide-react";
 import {
 	Dialog,
 	DialogContent,
@@ -33,6 +40,7 @@ interface Story {
 		name: string;
 		username: string;
 		avatar: string;
+		isVerified: boolean;
 	};
 }
 
@@ -194,7 +202,7 @@ export function Stories() {
 						<div className='relative rounded-full p-[2px]'>
 							<Avatar className='h-16 w-16 border-2 border-background'>
 								<AvatarImage
-									src={session?.user?.image || ""}
+									src={session?.user?.avatar || ""}
 									alt='Your story'
 									className='object-cover'
 								/>
@@ -303,6 +311,9 @@ export function Stories() {
 									</div>
 									<span className='text-xs text-muted-foreground'>
 										{story.user?.name || "User"}
+										{story.user?.isVerified && (
+											<BadgeCheck className='h-4 w-4 text-blue-500' />
+										)}
 									</span>
 								</div>
 							</DialogTrigger>
@@ -339,6 +350,9 @@ export function Stories() {
 											</Avatar>
 											<span className='text-sm font-medium text-white'>
 												{story.user?.name}
+												{story.user?.isVerified && (
+													<BadgeCheck className='h-4 w-4 text-blue-500' />
+												)}
 											</span>
 										</div>
 									</div>
@@ -405,6 +419,9 @@ export function Stories() {
 									</Avatar>
 									<span className='text-sm font-medium text-white'>
 										{selectedStory.user?.name}
+										{selectedStory.user?.isVerified && (
+											<BadgeCheck className='h-4 w-4 text-blue-500' />
+										)}
 									</span>
 								</div>
 							</div>

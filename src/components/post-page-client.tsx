@@ -13,6 +13,7 @@ import {
 	MoreHorizontal,
 	Copy,
 	Check,
+	BadgeCheck,
 } from "lucide-react";
 import {
 	DropdownMenu,
@@ -45,6 +46,7 @@ interface Post {
 		name: string;
 		username: string;
 		avatar: string;
+		isVerified: boolean;
 	};
 	comments: any[];
 	createdAt: string;
@@ -194,8 +196,11 @@ export function PostPageClient({ post }: PostPageClientProps) {
 							<div className='flex items-center gap-1'>
 								<Link
 									href={`/profile/${post.userId.username}`}
-									className='font-semibold hover:underline'>
+									className='font-semibold hover:underline flex items-center gap-1'>
 									{post.userId.name}
+									{post.userId.isVerified && (
+										<BadgeCheck className='h-4 w-4 text-blue-500' />
+									)}
 								</Link>
 							</div>
 							<p className='text-xs text-muted-foreground'>

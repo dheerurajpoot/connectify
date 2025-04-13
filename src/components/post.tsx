@@ -49,6 +49,7 @@ interface PostProps {
 			name: string;
 			username: string;
 			avatar: string;
+			isVerified: boolean;
 		};
 		content: string;
 		media: string[];
@@ -167,8 +168,6 @@ export function Post({ post }: PostProps) {
 		}
 	};
 
-	const isVerified = post.userId.username === "dheerurajpoot";
-
 	return (
 		<>
 			<Card className='overflow-hidden border-none flex-col gap-0.5 py-0 shadow-md transition-all duration-300 hover:shadow-lg dark:bg-gray-900 dark:shadow-gray-800/20'>
@@ -194,7 +193,7 @@ export function Post({ post }: PostProps) {
 								className='font-semibold hover:underline'>
 								{post.userId.name}
 							</Link>
-							{isVerified && (
+							{post.userId.isVerified && (
 								<BadgeCheck className='h-4 w-4 text-blue-500' />
 							)}
 						</div>
@@ -381,9 +380,13 @@ export function Post({ post }: PostProps) {
 											<div className='rounded-xl bg-muted flex flex-col gap-1 p-2 text-sm'>
 												<Link
 													href={`/profile/${comment.userId?.username}`}
-													className='font-medium'>
+													className='font-medium flex items-center gap-1'>
 													{comment.userId?.name}
-												</Link>{" "}
+													{comment.userId
+														?.isVerified && (
+														<BadgeCheck className='h-4 w-4 text-blue-500' />
+													)}
+												</Link>
 												<span className='text-muted-foreground'>
 													{comment.content}
 												</span>

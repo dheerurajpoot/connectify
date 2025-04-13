@@ -6,15 +6,13 @@ import {
 	Comment,
 	Story,
 	Message,
-	Notification,
 	IUser,
 	IPost,
 	IComment,
-	IStoryDocument,
 	IStoryCreate,
 	IMessage,
-	INotification,
 } from "@/models";
+import Notification from "@/models/Notification";
 import mongoose, { Types } from "mongoose";
 
 // User operations
@@ -66,8 +64,8 @@ export async function getUserByUsername(
 	const sanitizedUsername = String(username).trim().toLowerCase();
 
 	const user = await User.findOne({ username: sanitizedUsername })
-		.populate("followers", "name username avatar")
-		.populate("following", "name username avatar")
+		.populate("followers", "name username avatar isVerified")
+		.populate("following", "name username avatar isVerified")
 		.exec();
 
 	if (!user) {
@@ -133,15 +131,16 @@ export async function getSuggestedUsers(userId: string, limit = 5) {
 		_id: { $nin: [...user.following, userId] },
 	})
 		.limit(limit)
-		.select("name username avatar")
+		.select("name username avatar isVerified")
 		.lean();
 
 	// Convert ObjectIds to strings and ensure proper serialization
-	return users.map(user => ({
+	return users.map((user) => ({
 		_id: user._id.toString(),
 		name: user.name,
 		username: user.username,
 		avatar: user.avatar || "",
+		isVerified: user.isVerified,
 	}));
 }
 
@@ -161,7 +160,7 @@ export async function searchUsers(query: string, currentUserId: string) {
 			},
 		],
 	})
-		.select("name username avatar")
+		.select("name username avatar isVerified")
 		.lean()
 		.limit(10);
 
@@ -193,12 +192,12 @@ export async function createPost(
 export async function getPostById(id: string) {
 	await connectDB();
 	return Post.findById(id)
-		.populate("userId", "_id name username avatar")
+		.populate("userId", "_id name username avatar isVerified")
 		.populate({
 			path: "comments",
 			populate: {
 				path: "userId",
-				select: "name username avatar",
+				select: "name username avatar isVerified",
 			},
 		})
 		.lean();
@@ -226,12 +225,12 @@ export async function getFeedPosts(userId: string, page = 1, limit = 100) {
 		.sort({ createdAt: -1 })
 		.skip(skip)
 		.limit(limit)
-		.populate("userId", "name username avatar")
+		.populate("userId", "name username avatar isVerified")
 		.populate({
 			path: "comments",
 			populate: {
 				path: "userId",
-				select: "name username avatar",
+				select: "name username avatar isVerified",
 			},
 		});
 }
@@ -240,7 +239,7 @@ export async function getUserPosts(userId: string) {
 	await connectDB();
 	return Post.find({ userId })
 		.sort({ createdAt: -1 })
-		.populate("userId", "name username avatar");
+		.populate("userId", "name username avatar isVerified");
 }
 
 export async function likePost(postId: string, userId: string) {
@@ -292,7 +291,7 @@ export async function addComment(
 	// Populate and convert to plain object
 	const populatedComment = await newComment.populate(
 		"userId",
-		"_id name username avatar"
+		"_id name username avatar isVerified"
 	);
 
 	return populatedComment.toObject();
@@ -329,11 +328,11 @@ export async function getActiveStories(userId: string) {
 		expiresAt: { $gt: now },
 	})
 		.sort({ createdAt: -1 })
-		.populate("userId", "name username avatar")
+		.populate("userId", "name username avatar isVerified")
 		.lean();
 
 	// Transform the populated data into the expected format
-	return stories.map(story => ({
+	return stories.map((story) => ({
 		_id: story._id.toString(),
 		userId: story.userId._id.toString(),
 		media: story.media,
@@ -343,8 +342,9 @@ export async function getActiveStories(userId: string) {
 		user: {
 			name: (story.userId as any).name,
 			username: (story.userId as any).username,
-			avatar: (story.userId as any).avatar
-		}
+			avatar: (story.userId as any).avatar,
+			isVerified: (story.userId as any).isVerified,
+		},
 	}));
 }
 
@@ -392,8 +392,8 @@ export async function getConversation(
 	})
 		.sort({ createdAt: -1 })
 		.limit(limit)
-		.populate("senderId", "name username avatar")
-		.populate("receiverId", "name username avatar");
+		.populate("senderId", "name username avatar isVerified")
+		.populate("receiverId", "name username avatar isVerified");
 }
 
 export async function getUserConversations(userId: string) {
@@ -404,8 +404,8 @@ export async function getUserConversations(userId: string) {
 		$or: [{ senderId: userId }, { receiverId: userId }],
 	})
 		.sort({ createdAt: -1 })
-		.populate("senderId", "name username avatar")
-		.populate("receiverId", "name username avatar");
+		.populate("senderId", "name username avatar isVerified")
+		.populate("receiverId", "name username avatar isVerified");
 
 	// Group messages by conversation
 	const conversations: Record<string, any> = {};
@@ -461,7 +461,7 @@ export async function createNotification({
 }: {
 	userId: string;
 	actorId: string;
-	type: "like" | "comment" | "follow" | "mention" | "share";
+	type: "like" | "comment" | "follow" | "mention" | "share" | "admin";
 	postId?: string;
 	commentId?: string;
 }) {
@@ -484,7 +484,7 @@ export async function createNotification({
 		// Populate the actor details before returning
 		const populatedNotification = await newNotification.populate(
 			"actorId",
-			"name username avatar"
+			"name username avatar isVerified"
 		);
 
 		return populatedNotification.toObject();
@@ -507,7 +507,7 @@ export async function getUserNotifications(
 		.sort({ createdAt: -1 })
 		.skip(skip)
 		.limit(limit)
-		.populate("actorId", "name username avatar")
+		.populate("actorId", "name username avatar isVerified")
 		.populate("postId")
 		.populate("commentId")
 		.lean()
@@ -551,19 +551,28 @@ export async function verifyCredentials(email: string, password: string) {
 	return user;
 }
 
-export async function isUserFollowing(followerId: string, targetUsername: string) {
+export async function isUserFollowing(
+	followerId: string,
+	targetUsername: string
+) {
 	await connectDB();
 
 	try {
-		const targetUser = await User.findOne({ username: targetUsername }).lean<IUser & { _id: Types.ObjectId }>().exec();
+		const targetUser = await User.findOne({ username: targetUsername })
+			.lean<IUser & { _id: Types.ObjectId }>()
+			.exec();
 		if (!targetUser) return false;
 
-		const follower = await User.findById(followerId).lean<IUser & { _id: Types.ObjectId }>().exec();
+		const follower = await User.findById(followerId)
+			.lean<IUser & { _id: Types.ObjectId }>()
+			.exec();
 		if (!follower) return false;
 
-		return follower.following.some((id: Types.ObjectId) => id.toString() === targetUser._id.toString());
+		return follower.following.some(
+			(id: Types.ObjectId) => id.toString() === targetUser._id.toString()
+		);
 	} catch (error) {
-		console.error('Error checking follow status:', error);
+		console.error("Error checking follow status:", error);
 		return false;
 	}
 }
@@ -572,11 +581,11 @@ export async function isUserFollowing(followerId: string, targetUsername: string
 export async function getAllUsers() {
 	await connectDB();
 	const users = await User.find()
-		.select('-password')
+		.select("-password")
 		.sort({ createdAt: -1 })
 		.lean();
 
-	return users.map(user => ({
+	return users.map((user) => ({
 		...user,
 		_id: user._id.toString(),
 		createdAt: user.createdAt.toISOString(),
@@ -617,15 +626,14 @@ export async function getRecentUsers(limit = 10) {
 	const users = await User.find()
 		.sort({ createdAt: -1 })
 		.limit(limit)
-		.select('-password')
+		.select("-password")
 		.lean();
 
-	return users.map(user => ({
+	return users.map((user) => ({
 		...user,
 		_id: user._id.toString(),
 		createdAt: user.createdAt.toISOString(),
 		updatedAt: user.updatedAt.toISOString(),
-		status: user.isVerified ? 'active' : 'pending'
 	}));
 }
 
@@ -634,7 +642,7 @@ export async function getRecentPosts(limit = 10) {
 	return Post.find()
 		.sort({ createdAt: -1 })
 		.limit(limit)
-		.populate('userId', 'name username avatar')
+		.populate("userId", "name username avatar isVerified")
 		.lean();
 }
 
@@ -642,62 +650,86 @@ export async function getAllStories() {
 	await connectDB();
 	const stories = await Story.find()
 		.sort({ createdAt: -1 })
-		.populate('userId', 'name username avatar isVerified')
+		.populate("userId", "name username avatar isVerified")
 		.lean();
 
-	return stories.map(story => ({
+	return stories.map((story) => ({
 		...story,
 		_id: story._id.toString(),
 		userId: {
 			...story.userId,
-			_id: story.userId._id.toString()
+			_id: story.userId._id.toString(),
 		},
 		createdAt: story.createdAt.toISOString(),
 		expiresAt: story.expiresAt.toISOString(),
-		trending: story.viewers?.length > 100
+		trending: story.viewers?.length > 100,
 	}));
 }
 
-export async function updateStoryStatus(storyId: string, status: 'active' | 'expired' | 'flagged') {
+export async function updateStoryStatus(
+	storyId: string,
+	status: "active" | "expired" | "flagged"
+) {
 	await connectDB();
 	const story = await Story.findByIdAndUpdate(
 		storyId,
 		{ status },
 		{ new: true }
-	).populate('userId', 'name username avatar isVerified').lean();
+	)
+		.populate("userId", "name username avatar isVerified")
+		.lean();
 
-	if (!story) throw new Error('Story not found');
+	if (!story) throw new Error("Story not found");
 
 	return {
 		...story,
 		_id: story._id.toString(),
 		userId: {
 			...story.userId,
-			_id: story.userId._id.toString()
+			_id: story.userId._id.toString(),
 		},
 		createdAt: story.createdAt.toISOString(),
 		expiresAt: story.expiresAt.toISOString(),
-		trending: story.viewers?.length > 100
+		trending: story.viewers?.length > 100,
 	};
 }
 
 export async function toggleUserVerification(userId: string) {
 	await connectDB();
-	const user = await User.findById(userId);
-	if (!user) throw new Error('User not found');
+	const user = await User.findById(userId).lean();
+	if (!user) throw new Error("User not found");
 
-	user.isVerified = !user.isVerified;
-	await user.save();
-	return user;
+	const updatedUser = await User.findByIdAndUpdate(
+		userId,
+		{ isVerified: !user.isVerified },
+		{ new: true, lean: true }
+	);
+
+	if (!updatedUser) throw new Error("Failed to update user");
+
+	// Convert to plain object and serialize
+	const serializedUser = {
+		_id: updatedUser._id.toString(),
+		name: updatedUser.name,
+		username: updatedUser.username,
+		email: updatedUser.email,
+		avatar: updatedUser.avatar?.toString(),
+		bio: updatedUser.bio,
+		location: updatedUser.location,
+		website: updatedUser.website,
+		isVerified: updatedUser.isVerified,
+		role: updatedUser.role,
+		createdAt: updatedUser.createdAt?.toISOString(),
+	};
+
+	return serializedUser;
 }
 
-export async function updateUserRole(userId: string, role: 'user' | 'admin') {
+export async function updateUserRole(userId: string, role: "user" | "admin") {
 	await connectDB();
-	return User.findByIdAndUpdate(
-		userId,
-		{ role },
-		{ new: true }
-	).select('-password');
+	return User.findByIdAndUpdate(userId, { role }, { new: true }).select(
+		"-password"
+	);
 }
 
 export async function deleteUserAndContent(userId: string) {
@@ -752,4 +784,71 @@ export async function deleteUserAndContent(userId: string) {
 	}
 
 	return { success: true };
+}
+
+// Admin notification functions
+export async function createAdminNotification(
+	message: string,
+	adminId: string
+) {
+	await connectDB();
+
+	try {
+		const users = await User.find().select("_id").lean();
+
+		// Create a single notification first to test
+		const testNotification = new Notification({
+			userId: users[0]._id,
+			type: "admin",
+			actorId: new mongoose.Types.ObjectId(adminId),
+			message,
+			read: false,
+		});
+
+		// Log the notification before saving
+		console.log("Creating notification:", testNotification);
+
+		// Validate the notification
+		await testNotification.validate();
+
+		// If validation passes, create all notifications
+		const notifications = users.map((user) => ({
+			userId: user._id,
+			type: "admin",
+			actorId: new mongoose.Types.ObjectId(adminId),
+			message,
+			read: false,
+		}));
+
+		await Notification.insertMany(notifications);
+		return { success: true };
+	} catch (error) {
+		console.error("Error in createAdminNotification:", error);
+		throw error;
+	}
+}
+
+export async function getAllAdminNotifications() {
+	await connectDB();
+
+	const notifications = await Notification.find({ type: "admin" })
+		.sort({ createdAt: -1 })
+		.populate("actorId", "name username avatar isVerified")
+		.lean();
+
+	return notifications.map((notification) => ({
+		_id: notification._id.toString(),
+		userId: notification.userId.toString(),
+		actorId: {
+			_id: notification.actorId._id.toString(),
+			name: (notification.actorId as any).name,
+			username: (notification.actorId as any).username,
+			avatar: (notification.actorId as any).avatar,
+			isVerified: (notification.actorId as any).isVerified,
+		},
+		message: notification.message || "",
+		createdAt: notification.createdAt.toISOString(),
+		read: notification.read,
+		type: "admin" as const,
+	}));
 }

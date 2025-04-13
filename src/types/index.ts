@@ -4,6 +4,7 @@ export interface User {
   username: string;
   avatar?: string;
   online?: boolean;
+  isVerified?: boolean;
 }
 
 export interface Message {

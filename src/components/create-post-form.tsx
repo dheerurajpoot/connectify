@@ -83,7 +83,7 @@ export function CreatePostForm() {
 				<div className='flex gap-3'>
 					<Avatar>
 						<AvatarImage
-							src={session?.user?.image || ""}
+							src={session?.user?.avatar || ""}
 							alt={session?.user?.name || "Profile"}
 							className='object-cover'
 						/>

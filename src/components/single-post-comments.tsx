@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart } from "lucide-react";
+import { BadgeCheck, Heart } from "lucide-react";
 
 interface Comment {
 	_id: string;
@@ -12,6 +12,7 @@ interface Comment {
 		name: string;
 		username: string;
 		avatar: string;
+		isVerified: boolean;
 	};
 	content: string;
 	timePosted: string;
@@ -74,11 +75,14 @@ export default function SinglePostComments({
 							</Avatar>
 						</Link>
 						<div className='flex-1'>
-							<div className='flex flex-wrap items-start gap-x-1'>
+							<div className='flex flex-wrap items-start flex-col gap-x-1'>
 								<Link
 									href={`/profile/${comment?.userId?.username}`}
-									className='font-semibold hover:underline'>
-									{comment?.userId?.username}
+									className='font-semibold hover:underline flex items-center gap-1'>
+									{comment?.userId?.name}
+									{comment?.userId?.isVerified && (
+										<BadgeCheck className='h-4 w-4 text-blue-500' />
+									)}
 								</Link>
 								<p className='text-sm'>{comment.content}</p>
 							</div>

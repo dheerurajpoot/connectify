@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "timeago.js";
 import { sharePost } from "@/app/actions/post-actions";
 import { toast } from "@/components/ui/use-toast";
+import { BadgeCheck } from "lucide-react";
 
 interface PostPreviewDialogProps {
 	post: {
@@ -22,6 +23,7 @@ interface PostPreviewDialogProps {
 			name: string;
 			username: string;
 			avatar: string;
+			isVerified: boolean;
 		};
 		content: string;
 		media: string[];
@@ -92,6 +94,9 @@ export function PostPreviewDialog({
 						<div>
 							<div className='font-semibold'>
 								{post.userId.name}
+								{post.userId.isVerified && (
+									<BadgeCheck className='h-4 w-4 text-blue-500' />
+								)}
 							</div>
 							<p className='text-xs text-muted-foreground'>
 								{format(post.createdAt)}

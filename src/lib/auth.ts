@@ -14,6 +14,7 @@ declare module "next-auth" {
 			email?: string | null;
 			avatar?: string | null;
 			username?: string;
+			isVerified?: boolean;
 		};
 	}
 
@@ -59,6 +60,7 @@ export const authOptions: NextAuthOptions = {
 						username: user.username,
 						email: user.email,
 						avatar: user.avatar,
+						isVerified: user.isVerified,
 					};
 				} catch (error) {
 					console.error("Auth error:", error);

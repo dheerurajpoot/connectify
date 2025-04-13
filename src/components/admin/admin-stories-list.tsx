@@ -161,12 +161,12 @@ export function AdminStoriesList({
 									</Avatar>
 									<div>
 										<div className='flex items-center gap-1'>
-											<span className='text-sm font-medium text-white'>
+											<span className='text-sm font-medium text-white flex items-center gap-1'>
 												{story.userId.name}
+												{story.userId.isVerified && (
+													<BadgeCheck className='h-4 w-4 text-blue-500' />
+												)}
 											</span>
-											{story.userId.isVerified && (
-												<BadgeCheck className='h-4 w-4 text-blue-500' />
-											)}
 										</div>
 										<div className='text-xs text-gray-300'>
 											@{story.userId.username}

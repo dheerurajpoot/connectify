@@ -7,6 +7,7 @@ export interface IStoryDocument extends Document {
 	viewers: mongoose.Types.ObjectId[];
 	createdAt: Date;
 	expiresAt: Date;
+	status?: 'active' | 'expired' | 'flagged';
 }
 
 // Story Create Interface
@@ -22,6 +23,7 @@ const StorySchema = new Schema<IStoryDocument>(
 		media: { type: String, required: true },
 		viewers: [{ type: Schema.Types.ObjectId, ref: "User" }],
 		expiresAt: { type: Date, required: true },
+		status: { type: String, enum: ['active', 'expired', 'flagged'], default: 'active' }
 	},
 	{ timestamps: true }
 );

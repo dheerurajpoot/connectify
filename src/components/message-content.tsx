@@ -11,6 +11,7 @@ import {
 	MoreVertical,
 	Loader2,
 	ArrowLeft,
+	BadgeCheck,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -32,12 +33,14 @@ interface DBMessage {
 		name: string;
 		username: string;
 		avatar?: string;
+		isVerified: boolean;
 	};
 	receiverId: {
 		_id: { toString(): string };
 		name: string;
 		username: string;
 		avatar?: string;
+		isVerified: boolean;
 	};
 	content: string;
 	read: boolean;
@@ -118,7 +121,8 @@ export function MessageContent() {
 								_id: session?.user?.id || "",
 								name: session?.user?.name || "",
 								username: session?.user?.username || "",
-								avatar: session?.user?.image,
+								avatar: session?.user?.avatar,
+								isVerified: session?.user?.isVerified || false,
 							},
 						};
 						// Add new message to the end (chronological order)
@@ -206,12 +210,14 @@ export function MessageContent() {
 							name: msg.senderId.name || "",
 							username: msg.senderId.username || "",
 							avatar: msg.senderId.avatar || undefined,
+							isVerified: Boolean(msg.senderId.isVerified),
 						},
 						receiverId: {
 							_id: msg.receiverId._id.toString(),
 							name: msg.receiverId.name || "",
 							username: msg.receiverId.username || "",
 							avatar: msg.receiverId.avatar || undefined,
+							isVerified: Boolean(msg.receiverId.isVerified),
 						},
 						content: msg.content || "",
 						read: Boolean(msg.read),
@@ -232,9 +238,8 @@ export function MessageContent() {
 						_id: partnerInfo._id.toString(),
 						name: partnerInfo.name,
 						username: partnerInfo.username,
-						avatar:
-							partnerInfo.avatar ||
-							"/placeholder.svg?height=40&width=40",
+						avatar: partnerInfo.avatar || "",
+						isVerified: Boolean(partnerInfo.isVerified),
 						online: true, // TODO: Implement online status with socket.io
 					});
 				}
@@ -268,7 +273,7 @@ export function MessageContent() {
 				_id: session.user.id,
 				name: session.user.name || "",
 				username: session.user.username || "",
-				avatar: session.user.image || undefined,
+				avatar: session.user.avatar || undefined,
 			},
 			receiverId: {
 				_id: partnerId,
@@ -375,13 +380,21 @@ export function MessageContent() {
 						</Button>
 					)}
 					<Avatar>
-						<AvatarImage src={partner?.avatar} className='object-cover' />
+						<AvatarImage
+							src={partner?.avatar}
+							className='object-cover'
+						/>
 						<AvatarFallback>
 							{partner?.name?.slice(0, 2) || "?"}
 						</AvatarFallback>
 					</Avatar>
 					<div>
-						<p className='font-semibold'>{partner?.name}</p>
+						<p className='font-semibold flex items-center gap-1'>
+							{partner?.name}
+							{partner?.isVerified && (
+								<BadgeCheck className='h-4 w-4 text-blue-500' />
+							)}
+						</p>
 						<div className='flex items-center gap-2'>
 							<p className='text-sm text-muted-foreground'>
 								@{partner?.username}

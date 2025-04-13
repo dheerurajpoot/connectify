@@ -3,19 +3,23 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import {
-	getSystemStats,
-	getRecentUsers,
-	getRecentPosts,
-	toggleUserVerification,
-	updateUserRole,
-	deleteUserAndContent,
-	getUserById,
-	getAllUsers,
+	getSystemStats as getSystemStatsDB,
+	getRecentUsers as getRecentUsersDB,
+	getRecentPosts as getRecentPostsDB,
+	toggleUserVerification as toggleUserVerificationDB,
+	updateUserRole as updateUserRoleDB,
+	deleteUserAndContent as deleteUserAndContentDB,
+	getUserById as getUserByIdDB,
+	getAllUsers as getAllUsersDB,
 	updateUser as updateUserDB,
-	getAllStories as getAllStoriesFromDB,
+	getAllStories as getAllStoriesDB,
+	createAdminNotification as createAdminNotificationDB,
+	updateStoryStatus as updateStoryStatusDB,
+	getAllAdminNotifications as getAllAdminNotificationsFromDB,
 } from "@/lib/db";
 import { Post } from "@/models";
 import { Types } from "mongoose";
+import Notification from "@/models/Notification";
 
 interface IPopulatedUser {
 	_id: Types.ObjectId;
@@ -139,7 +143,7 @@ async function isAdmin() {
 		throw new Error("Not authenticated");
 	}
 
-	const user = await getUserById(session.user.id);
+	const user = await getUserByIdDB(session.user.id);
 	return user?.role === "admin";
 }
 
@@ -149,7 +153,7 @@ export async function getAdminDashboardStats() {
 	}
 
 	try {
-		const stats = await getSystemStats();
+		const stats = await getSystemStatsDB();
 		return { success: true, stats };
 	} catch (error) {
 		console.error("Error fetching admin stats:", error);
@@ -163,7 +167,7 @@ export async function getAdminUsers() {
 	}
 
 	try {
-		const users = await getAllUsers();
+		const users = await getAllUsersDB();
 		return {
 			success: true,
 			users: users.map((user) => ({
@@ -193,7 +197,7 @@ export async function getAdminRecentUsers() {
 	}
 
 	try {
-		const users = await getRecentUsers();
+		const users = await getRecentUsersDB();
 		return { success: true, users };
 	} catch (error) {
 		console.error("Error fetching recent users:", error);
@@ -207,7 +211,7 @@ export async function getAdminRecentPosts() {
 	}
 
 	try {
-		const posts = await getRecentPosts();
+		const posts = await getRecentPostsDB();
 		return { success: true, posts };
 	} catch (error) {
 		console.error("Error fetching recent posts:", error);
@@ -228,7 +232,7 @@ interface IStory {
 	createdAt: string;
 	expiresAt: string;
 	viewers: string[];
-	status: 'active' | 'expired' | 'flagged';
+	status: "active" | "expired" | "flagged";
 	trending?: boolean;
 }
 
@@ -245,9 +249,12 @@ interface IDBStory {
 	createdAt: string;
 	expiresAt: string;
 	viewers: Types.ObjectId[];
-	status?: 'active' | 'expired' | 'flagged';
+	status?: "active" | "expired" | "flagged";
 	trending: boolean;
-	$assertPopulated?: <Paths = {}>(path: string | string[], values?: Partial<Paths> | undefined) => any;
+	$assertPopulated?: <Paths = {}>(
+		path: string | string[],
+		values?: Partial<Paths> | undefined
+	) => any;
 	__v?: number;
 }
 
@@ -265,16 +272,16 @@ export async function getAllStories(): Promise<APIResponse<IStory>> {
 	}
 
 	try {
-		const dbStories = (await getAllStoriesFromDB()) as unknown as IDBStory[];
-		const stories = dbStories.map(story => ({
+		const dbStories = (await getAllStoriesDB()) as unknown as IDBStory[];
+		const stories = dbStories.map((story) => ({
 			_id: story._id,
 			userId: story.userId,
 			media: story.media,
 			createdAt: story.createdAt,
 			expiresAt: story.expiresAt,
-			viewers: story.viewers.map(v => v.toString()),
-			status: story.status || 'active' as const,
-			trending: story.trending
+			viewers: story.viewers.map((v) => v.toString()),
+			status: story.status || ("active" as const),
+			trending: story.trending,
 		}));
 		return { success: true, stories };
 	} catch (error) {
@@ -283,13 +290,35 @@ export async function getAllStories(): Promise<APIResponse<IStory>> {
 	}
 }
 
-export async function updateStoryStatus(storyId: string, status: "active" | "expired" | "flagged"): Promise<APIResponse<IStory>> {
+export async function updateStoryStatus(
+	storyId: string,
+	status: "active" | "expired" | "flagged"
+): Promise<APIResponse<IStory>> {
 	if (!(await isAdmin())) {
 		return { error: "Unauthorized access" };
 	}
 
 	try {
-		const story = await updateStoryStatus(storyId, status) as IStory;
+		const dbStory = await updateStoryStatusDB(storyId, status);
+		// Transform the database story into the expected IStory format
+		const story: IStory = {
+			_id: dbStory._id.toString(),
+			userId: {
+				_id: (dbStory.userId as any)._id.toString(),
+				name: (dbStory.userId as any).name,
+				username: (dbStory.userId as any).username,
+				avatar: (dbStory.userId as any).avatar,
+				isVerified: (dbStory.userId as any).isVerified,
+			},
+			media: dbStory.media,
+			createdAt: dbStory.createdAt,
+			expiresAt: dbStory.expiresAt,
+			viewers: Array.isArray(dbStory.viewers)
+				? dbStory.viewers.map((id) => id.toString())
+				: [],
+			status: status as "active" | "expired" | "flagged",
+			trending: Boolean(dbStory.trending),
+		};
 		return {
 			success: true,
 			message: `Story status updated to ${status} successfully`,
@@ -307,7 +336,7 @@ export async function handleUserVerification(userId: string) {
 	}
 
 	try {
-		const user = await toggleUserVerification(userId);
+		const user = await toggleUserVerificationDB(userId);
 		return {
 			success: true,
 			message: `User ${
@@ -327,7 +356,7 @@ export async function handleUserRole(userId: string, role: "user" | "admin") {
 	}
 
 	try {
-		const user = await updateUserRole(userId, role);
+		const user = await updateUserRoleDB(userId, role);
 		return {
 			success: true,
 			message: `User role updated to ${role} successfully`,
@@ -348,6 +377,7 @@ export async function updateUser(
 		bio?: string;
 		location?: string;
 		website?: string;
+		isVerified?: boolean;
 	}
 ) {
 	if (!(await isAdmin())) {
@@ -373,7 +403,7 @@ export async function handleUserDeletion(userId: string) {
 	}
 
 	try {
-		await deleteUserAndContent(userId);
+		await deleteUserAndContentDB(userId);
 		return {
 			success: true,
 			message: "User and associated content deleted successfully",
@@ -381,5 +411,68 @@ export async function handleUserDeletion(userId: string) {
 	} catch (error) {
 		console.error("Error deleting user:", error);
 		return { error: "Failed to delete user and their content" };
+	}
+}
+
+// Admin notification actions
+export async function createAdminNotification(message: string) {
+	if (!(await isAdmin())) {
+		return { error: "Unauthorized access" };
+	}
+
+	try {
+		const session = await getServerSession(authOptions);
+		if (!session?.user?.id) {
+			return { error: "Unauthorized access" };
+		}
+
+		await createAdminNotificationDB(message, session.user.id);
+		return { success: true, message: "Notification sent successfully" };
+	} catch (error) {
+		console.error("Error creating admin notification:", error);
+		return { error: "Failed to send notification" };
+	}
+}
+
+export interface IAdminNotification {
+	_id: string;
+	userId: string;
+	actorId: {
+		_id: string;
+		name: string;
+		username: string;
+		avatar: string;
+		isVerified: boolean;
+	};
+	message: string;
+	createdAt: string;
+	read: boolean;
+	type: string;
+}
+
+async function getAllAdminNotificationsDB(): Promise<IAdminNotification[]> {
+	const notifications = await Notification.find({ type: "admin" })
+		.populate("actorId", "name username avatar isVerified")
+		.sort({ createdAt: -1 })
+		.lean();
+
+	return notifications as unknown as IAdminNotification[];
+}
+
+export async function getAdminNotifications(): Promise<{
+	error?: string;
+	success?: boolean;
+	notifications?: IAdminNotification[];
+}> {
+	if (!(await isAdmin())) {
+		return { error: "Unauthorized access" };
+	}
+
+	try {
+		const notifications = await getAllAdminNotificationsFromDB();
+		return { success: true, notifications };
+	} catch (error) {
+		console.error("Error fetching admin notifications:", error);
+		return { error: "Failed to fetch notifications" };
 	}
 }

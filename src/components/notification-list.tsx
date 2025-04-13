@@ -11,20 +11,23 @@ import {
 } from "@/app/actions/notification-actions";
 import { useSession } from "next-auth/react";
 import { useToast } from "../hooks/use-toast";
+import { BadgeCheck } from "lucide-react";
 interface Notification {
 	_id: string;
 	userId: string;
-	type: "like" | "comment" | "follow" | "mention";
+	type: "like" | "comment" | "follow" | "mention" | "admin";
 	actorId: {
 		_id: string;
 		name: string;
 		username: string;
 		avatar: string;
+		isVerified: boolean;
 	};
 	postId?: string;
 	commentId?: string;
 	read: boolean;
 	createdAt: string;
+	message: string;
 }
 
 interface NotificationListProps {
@@ -73,12 +76,14 @@ export function NotificationList({ type }: NotificationListProps) {
 								name: n.actorId.name,
 								username: n.actorId.username,
 								avatar: n.actorId.avatar,
+								isVerified: n.actorId.isVerified,
 							},
 							postId: n.postId ? n.postId.toString() : undefined,
 							commentId: n.commentId
 								? n.commentId.toString()
 								: undefined,
 							read: n.read,
+							message: n.message,
 							createdAt: n.createdAt,
 						};
 
@@ -195,6 +200,8 @@ export function NotificationList({ type }: NotificationListProps) {
 				return "started following you";
 			case "mention":
 				return "mentioned you in a comment";
+			case "admin":
+				return "sent you a notification";
 			default:
 				return "";
 		}
@@ -239,8 +246,11 @@ export function NotificationList({ type }: NotificationListProps) {
 								<div className='flex items-center gap-1'>
 									<Link
 										href={`/profile/${notification.actorId.username}`}
-										className='font-medium hover:underline'>
+										className='font-medium hover:underline flex items-center gap-1'>
 										{notification.actorId.name}
+										{notification.actorId.isVerified && (
+											<BadgeCheck className='h-4 w-4 text-blue-500' />
+										)}
 									</Link>
 									<span className='text-sm'>
 										{getNotificationContent(notification)}
@@ -257,6 +267,11 @@ export function NotificationList({ type }: NotificationListProps) {
 										className='mt-1 text-sm text-muted-foreground hover:underline'>
 										View post
 									</Link>
+								)}
+								{notification.message && (
+									<span className='mt-1 text-sm text-muted-foreground'>
+										{notification.message}
+									</span>
 								)}
 							</div>
 							{notification.type === "follow" && (
