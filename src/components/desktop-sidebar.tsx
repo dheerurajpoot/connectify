@@ -85,7 +85,7 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 	return (
 		<div
 			className={cn(
-				"fixed inset-y-0 z-30 flex w-64 flex-col border-r bg-background",
+				"fixed inset-y-0 z-30 flex w-68 flex-col border-r bg-background",
 				className
 			)}>
 			<div className='flex h-16 items-center border-b px-6'>
@@ -141,7 +141,7 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 						</p>
 						<p className='text-xs text-muted-foreground'>
 							@
-							{session?.user?.username?.substring(0, 15) + ".." ||
+							{session?.user?.username?.substring(0, 20) ||
 								"username"}
 						</p>
 					</div>
@@ -157,7 +157,9 @@ export function DesktopSidebar({ className }: DesktopSidebarProps) {
 								<span className='sr-only'>Menu</span>
 							</Button>
 						</SheetTrigger>
-						<SheetContent side='left' className='flex flex-col p-8'>
+						<SheetContent
+							side='left'
+							className='flex flex-col w-68 p-8'>
 							<div className='flex items-center gap-3 border-b pb-4'>
 								<Avatar>
 									<AvatarImage

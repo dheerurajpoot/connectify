@@ -38,7 +38,7 @@ export async function SuggestedUsers() {
 							<div>
 								<Link
 									href={`/profile/${user.username}`}
-									className='text-sm font-medium hover:underline'>
+									className='text-sm font-medium hover:underline flex gap-2'>
 									{user.name}
 									{user.isVerified && (
 										<BadgeCheck className='h-5 w-5 text-white fill-blue-500' />

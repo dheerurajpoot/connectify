@@ -14,6 +14,7 @@ declare module "next-auth" {
 			email?: string | null;
 			avatar?: string | null;
 			username?: string;
+			role?: string;
 			isVerified?: boolean;
 		};
 	}
@@ -21,6 +22,8 @@ declare module "next-auth" {
 	interface User {
 		id: string;
 		username: string;
+		role?: string;
+		isVerified?: boolean;
 	}
 }
 
@@ -43,7 +46,7 @@ export const authOptions: NextAuthOptions = {
 					const user = await User.findOne({
 						email: credentials.email,
 					}).lean();
-
+					
 					if (!user) return null;
 
 					const isPasswordValid = await bcrypt.compare(
@@ -53,17 +56,18 @@ export const authOptions: NextAuthOptions = {
 
 					if (!isPasswordValid) return null;
 
-					// Return user without password
+					// Transform MongoDB document to the expected User type
 					return {
 						id: user._id.toString(),
 						name: user.name,
 						username: user.username,
 						email: user.email,
 						avatar: user.avatar,
-						isVerified: user.isVerified,
+						role: user.role as "user" | "admin",
+						isVerified: Boolean(user.isVerified)
 					};
 				} catch (error) {
-					console.error("Auth error:", error);
+					console.error("Authentication error:", error);
 					return null;
 				}
 			},
@@ -74,6 +78,8 @@ export const authOptions: NextAuthOptions = {
 			if (user) {
 				token.id = user.id;
 				token.username = user.username;
+				token.role = user.role || "user";
+				token.isVerified = user.isVerified || false;
 			}
 			return token;
 		},
@@ -81,6 +87,8 @@ export const authOptions: NextAuthOptions = {
 			if (token && session.user) {
 				session.user.id = token.id as string;
 				session.user.username = token.username as string;
+				session.user.role = token.role as string;
+				session.user.isVerified = token.isVerified as boolean;
 			}
 			return session;
 		},

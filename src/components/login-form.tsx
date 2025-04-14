@@ -12,14 +12,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "../hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { toast } from "sonner";
 
 export function LoginForm() {
 	const [isLoading, setIsLoading] = useState(false);
-	const { toast } = useToast();
 	const router = useRouter();
 	const form = useForm({
 		defaultValues: {
@@ -38,28 +37,18 @@ export function LoginForm() {
 				password: values.password,
 				redirect: false,
 			});
-
 			if (result?.error) {
-				toast({
-					title: "Error",
-					description: "Invalid email or password",
-					variant: "destructive",
-				});
+				toast("Invalid email or password");
 				return;
 			}
-
-			toast({
-				title: "Success",
-				description: "Logged in successfully",
-			});
-			router.push("/");
-			router.refresh();
+			if (result?.ok) {
+				toast("Logged in successfully");
+				router.push("/");
+				router.refresh();
+			}
 		} catch (error) {
-			toast({
-				title: "Error",
-				description: "Something went wrong. Please try again.",
-				variant: "destructive",
-			});
+			console.error("Login error:", error);
+			toast("Something went wrong. Please try again.");
 		} finally {
 			setIsLoading(false);
 		}

@@ -15,6 +15,31 @@ import {
 import Notification from "@/models/Notification";
 import mongoose, { Types } from "mongoose";
 
+interface IVerificationRequest {
+	_id: Types.ObjectId;
+	userId: Types.ObjectId;
+	links: string[];
+	about: string;
+	category: string;
+	governmentId: string;
+	status: 'pending' | 'approved' | 'rejected';
+	createdAt: Date;
+	updatedAt: Date;
+}
+
+const VerificationRequestSchema = new mongoose.Schema<IVerificationRequest>({
+	userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+	links: [{ type: String, required: true }],
+	about: { type: String, required: true },
+	category: { type: String, required: true },
+	governmentId: { type: String, required: true },
+	status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+	createdAt: { type: Date, default: Date.now },
+	updatedAt: { type: Date, default: Date.now },
+});
+
+const VerificationRequest = mongoose.models.VerificationRequest || mongoose.model('VerificationRequest', VerificationRequestSchema);
+
 // User operations
 export async function createUser(userData: {
 	name: string;
@@ -536,6 +561,90 @@ export async function deletePost(postId: string) {
 	await connectDB();
 	await Post.findByIdAndDelete(postId);
 	return { success: true };
+}
+
+// Verification Request operations
+export async function createVerificationRequest(userId: string, data: {
+	links: string[];
+	about: string;
+	category: string;
+	governmentId: string;
+}) {
+	try {
+		const existingRequest = await VerificationRequest.findOne({ 
+			userId: new Types.ObjectId(userId),
+			status: 'pending'
+		});
+
+		if (existingRequest) {
+			throw new Error('You already have a pending verification request');
+		}
+
+		const request = await VerificationRequest.create({
+			userId: new Types.ObjectId(userId),
+			...data
+		});
+
+		return { success: true, request };
+	} catch (error) {
+		console.error('Error creating verification request:', error);
+		throw error;
+	}
+}
+
+export async function getVerificationRequests(status?: string) {
+	try {
+		const query = status ? { status } : {};
+		const requests = await VerificationRequest.find(query)
+			.populate('userId', 'name username avatar email')
+			.sort({ createdAt: -1 })
+			.lean();
+
+		return {
+			success: true,
+			requests: requests.map((req: any) => ({
+				_id: req._id.toString(),
+				userId: {
+					_id: req.userId._id.toString(),
+					name: req.userId.name,
+					username: req.userId.username,
+					avatar: req.userId.avatar
+				},
+				links: req.links,
+				about: req.about,
+				category: req.category,
+				governmentId: req.governmentId,
+				status: req.status,
+				createdAt: req.createdAt,
+				updatedAt: req.updatedAt
+			}))
+		};
+	} catch (error) {
+		console.error('Error getting verification requests:', error);
+		throw error;
+	}
+}
+
+export async function updateVerificationRequest(requestId: string, status: 'approved' | 'rejected') {
+	try {
+		const request = await VerificationRequest.findById(requestId).populate('userId');
+		if (!request) {
+			throw new Error('Verification request not found');
+		}
+
+		request.status = status;
+		request.updatedAt = new Date();
+		await request.save();
+
+		if (status === 'approved') {
+			await User.findByIdAndUpdate(request.userId._id, { isVerified: true });
+		}
+
+		return { success: true, request };
+	} catch (error) {
+		console.error('Error updating verification request:', error);
+		throw error;
+	}
 }
 
 // Authentication

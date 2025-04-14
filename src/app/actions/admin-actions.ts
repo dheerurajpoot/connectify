@@ -16,10 +16,27 @@ import {
 	createAdminNotification as createAdminNotificationDB,
 	updateStoryStatus as updateStoryStatusDB,
 	getAllAdminNotifications as getAllAdminNotificationsFromDB,
+	getVerificationRequests as getVerificationRequestsDb,
+	updateVerificationRequest as updateVerificationRequestDb,
 } from "@/lib/db";
 import { Post } from "@/models";
 import { Types } from "mongoose";
 import Notification from "@/models/Notification";
+import { Session } from "next-auth";
+
+interface SessionUser {
+	id: string;
+	name?: string | null;
+	email?: string | null;
+	avatar?: string | null;
+	username?: string;
+	isVerified?: boolean;
+	role?: string;
+}
+
+interface ExtendedSession extends Omit<Session, "user"> {
+	user?: SessionUser;
+}
 
 interface IPopulatedUser {
 	_id: Types.ObjectId;
@@ -474,5 +491,42 @@ export async function getAdminNotifications(): Promise<{
 	} catch (error) {
 		console.error("Error fetching admin notifications:", error);
 		return { error: "Failed to fetch notifications" };
+	}
+}
+
+export async function getVerificationRequests(status?: string) {
+	try {
+		const session = (await getServerSession(
+			authOptions
+		)) as ExtendedSession;
+		if (session?.user?.role !== "admin") {
+			return { success: false, error: "Not authorized" };
+		}
+
+		const result = await getVerificationRequestsDb(status);
+		return { success: true, requests: result.requests };
+	} catch (error: any) {
+		console.error("Error getting verification requests:", error);
+		return { success: false, error: error.message };
+	}
+}
+
+export async function updateVerificationRequest(
+	requestId: string,
+	status: "approved" | "rejected"
+) {
+	try {
+		const session = (await getServerSession(
+			authOptions
+		)) as ExtendedSession;
+		if (session?.user?.role !== "admin") {
+			return { success: false, error: "Not authorized" };
+		}
+
+		const result = await updateVerificationRequestDb(requestId, status);
+		return { success: true, request: result.request };
+	} catch (error: any) {
+		console.error("Error updating verification request:", error);
+		return { success: false, error: error.message };
 	}
 }

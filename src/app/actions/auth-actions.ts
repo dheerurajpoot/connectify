@@ -1,6 +1,7 @@
 "use server";
 
 import { createUser, getUserByEmail } from "@/lib/db";
+import bcrypt from "bcryptjs";
 
 export async function registerUser(formData: FormData) {
 	try {
@@ -53,6 +54,12 @@ export async function loginUser(formData: FormData) {
 		// Check if user exists
 		const user = await getUserByEmail(email);
 		if (!user) {
+			return { error: "Invalid email or password" };
+		}
+
+		// Verify password
+		const isPasswordValid = await bcrypt.compare(password, user.password);
+		if (!isPasswordValid) {
 			return { error: "Invalid email or password" };
 		}
 

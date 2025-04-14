@@ -433,7 +433,7 @@ export function MessageContent() {
 					</div>
 				) : (
 					<div
-						className='space-y-4 px-4 flex flex-col h-full overflow-x-scroll pt-2'
+						className='space-y-4 px-4 flex flex-col h-full pb-6 overflow-auto pt-2'
 						ref={messagesEndRef}>
 						{messages.map((message) => (
 							<div
